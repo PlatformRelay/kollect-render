@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/platformrelay/kollect-render/schema/inventory-v0.schema.json",
+  "title": "Neutral inventory evidence envelope (draft v0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "metadata", "provenance", "targetOutcomes", "components", "helmReleases", "workloads", "nodes"],
+  "properties": {
+    "schemaVersion": { "const": "0.2.0" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environmentId", "sourceId", "collectedAt"],
+      "properties": {
+        "environmentId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "sourceId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "collectedAt": { "type": "string", "format": "date-time" },
+        "stale": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lastGoodAt", "statusCode"],
+          "properties": {
+            "lastGoodAt": { "type": "string", "format": "date-time" },
+            "statusCode": { "type": "string", "enum": ["unreachable", "unauthorized", "timeout", "collection-failed"] }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "collectionStartedAt", "collectionFinishedAt", "rawPayloadDigest", "collectorVersion", "normalizerVersion", "configVersion", "schemaDigest"],
+      "properties": {
+        "runId": { "type": "string", "minLength": 1 },
+        "collectionStartedAt": { "type": "string", "format": "date-time" },
+        "collectionFinishedAt": { "type": "string", "format": "date-time" },
+        "rawPayloadDigest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "collectorVersion": { "type": "string", "minLength": 1 },
+        "normalizerVersion": { "type": "string", "minLength": 1 },
+        "configVersion": { "type": "string", "minLength": 1 },
+        "schemaDigest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "templateVersion": { "type": "string" }
+      }
+    },
+    "targetOutcomes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["targetId", "status"],
+        "properties": {
+          "targetId": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["collected", "empty", "unsupported", "unauthorized", "failed"] },
+          "errorCode": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["componentId", "instanceId", "name", "version"],
+        "properties": {
+          "componentId": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "instanceId": { "type": "string", "minLength": 1 },
+          "name": { "type": "string" },
+          "kind": { "type": "string" },
+          "namespace": { "type": "string" },
+          "version": { "type": "string" }
+        }
+      }
+    },
+    "helmReleases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["instanceId", "componentId", "name", "namespace", "chartName", "chartVersion", "status"],
+        "properties": {
+          "instanceId": { "type": "string", "minLength": 1 },
+          "componentId": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "name": { "type": "string" },
+          "namespace": { "type": "string" },
+          "chartName": { "type": "string" },
+          "chartVersion": { "type": "string" },
+          "appVersion": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    },
+    "workloads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "name", "namespace", "images"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["Deployment", "StatefulSet", "DaemonSet", "CronJob"] },
+          "name": { "type": "string" },
+          "namespace": { "type": "string" },
+          "images": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+        }
+      }
+    },
+    "nodes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "kubernetesVersions"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "kubernetesVersions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Optional classified extensions; producers must apply the persisted-field allow/deny policy."
+    }
+  }
+}

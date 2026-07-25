@@ -1,0 +1,45 @@
+# Synthetic neutral example; contains no organization-specific coordinates.
+schemaVersion: "0.2.0"
+metadata:
+  environmentId: region-a
+  sourceId: cluster-alpha
+  collectedAt: "2026-07-21T04:00:12Z"
+provenance:
+  runId: run-20260721-0400
+  collectionStartedAt: "2026-07-21T04:00:00Z"
+  collectionFinishedAt: "2026-07-21T04:00:12Z"
+  rawPayloadDigest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  collectorVersion: v1.2.3
+  normalizerVersion: v0.3.0
+  configVersion: "git:0123456789ab"
+  schemaDigest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+targetOutcomes:
+  - targetId: platform-components
+    status: collected
+  - targetId: workloads
+    status: collected
+components:
+  - componentId: event-broker
+    instanceId: platform/event-broker-alpha
+    name: event-broker-alpha
+    kind: example.io/EventBroker
+    namespace: platform
+    version: "3.9.0"
+helmReleases:
+  - instanceId: platform/operator-alpha
+    componentId: platform-operator
+    name: operator-alpha
+    namespace: platform
+    chartName: platform-operator
+    chartVersion: "0.47.0"
+    appVersion: "0.47.0"
+    status: deployed
+workloads:
+  - kind: Deployment
+    name: operator-alpha
+    namespace: platform
+    images:
+      - registry.example.org/platform/operator:0.47.0
+nodes:
+  count: 3
+  kubernetesVersions: ["v1.32.4"]

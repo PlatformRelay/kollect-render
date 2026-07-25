@@ -13,7 +13,8 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md).
    task check
    ```
 
-   That runs `gofmt` check, `go vet`, unit tests, a binary build, and the **REWE-trace**
+   That runs `gofmt` check, `go vet`, golangci-lint, go-arch-lint, unit tests with an
+   **internal/ coverage floor of ≥90%**, gitleaks, a binary build, and the **REWE-trace**
    gate (fails if forbidden internal markers appear in tracked files).
 
 3. Keep the tree free of organization-specific identifiers. Runtime configuration belongs

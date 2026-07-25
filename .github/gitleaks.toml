@@ -1,0 +1,10 @@
+# Gitleaks config for kollect-render (secret scan gate).
+title = "kollect-render"
+
+[allowlist]
+description = "False positives / intentional fixtures"
+paths = [
+  '''(^|/)go\.sum$''',
+  '''(^|/)LICENSE$''',
+  '''(^|/)CODE_OF_CONDUCT\.md$''',
+]

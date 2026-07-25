@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -27,5 +29,26 @@ jobs:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+        run: |
+          set -euo pipefail
+          OS=linux
+          ARCH="$(uname -m)"
+          case "${ARCH}" in
+            x86_64) ARCH=x64 ;;
+            aarch64|arm64) ARCH=arm64 ;;
+            *) echo "unsupported arch ${ARCH}" >&2; exit 1 ;;
+          esac
+          TARBALL="gitleaks_${GITLEAKS_VERSION}_${OS}_${ARCH}.tar.gz"
+          BASE="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          curl -fsSL "${BASE}/${TARBALL}" -o /tmp/gitleaks.tgz
+          tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
       - name: task check
         run: task check
+        env:
+          COVERAGE_MIN: "90"

@@ -13,8 +13,8 @@ import (
 	"github.com/platformrelay/kollect-render/internal/validate"
 )
 
-// version is a scaffold placeholder until release tagging lands (E2-S07).
-const version = "0.0.0-dev"
+// version is overridden by goreleaser ldflags (-X main.version={{.Version}}).
+var version = "0.0.0-dev"
 
 func main() {
 	os.Exit(run(os.Args[1:]))

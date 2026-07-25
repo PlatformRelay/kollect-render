@@ -1,0 +1,57 @@
+version: 3
+workdir: .
+exclude:
+  - cmd/**
+  - hack/**
+  - test/**
+  - bin/**
+  - dist/**
+  - agent-context
+allow:
+  depOnAnyVendor: true
+
+vendors:
+  yaml:
+    in: gopkg.in/yaml.v3/**
+  semver-mod:
+    in: golang.org/x/mod/**
+  jsonschema:
+    in: github.com/santhosh-tekuri/jsonschema/**
+
+components:
+  schema:
+    in: schema/**
+  artifact:
+    in: internal/artifact/**
+  format:
+    in: internal/format/**
+  render:
+    in: internal/render/**
+  validate:
+    in: internal/validate/**
+
+# Self-deps allow external *_test packages (package foo_test) to import their SUT.
+deps:
+  schema:
+    mayDependOn:
+      - schema
+  artifact:
+    mayDependOn:
+      - artifact
+  render:
+    mayDependOn:
+      - render
+    canUse:
+      - yaml
+      - semver-mod
+  format:
+    mayDependOn:
+      - format
+      - render
+  validate:
+    mayDependOn:
+      - validate
+      - schema
+    canUse:
+      - yaml
+      - jsonschema

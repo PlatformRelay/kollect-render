@@ -33,6 +33,7 @@ credentials*.json
 cover.out
 coverage.out
 coverage.html
+coverage-summary.txt
 __debug_bin*
 testbin/
 *.exe

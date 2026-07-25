@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=https://golangci-lint.run/jsonschema/golangci.v2.2.json
+---
+version: "2"
+
+run:
+  timeout: 5m
+  allow-parallel-runners: true
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - gocyclo
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - unconvert
+    - unused
+  settings:
+    gocyclo:
+      # CLI flag parsing is inherently branchy; keep the floor useful without
+      # forcing a parser rewrite in the release lane.
+      min-complexity: 45
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+        - shadow
+    gosec:
+      excludes:
+        - G306 # published artifact files are intentionally world-readable
+        - G703 # CLI accepts caller-supplied filesystem paths by design
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+        - name: if-return
+        - name: increment-decrement
+        - name: var-naming
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - gocyclo
+      - text: "stutters"
+        linters:
+          - revive
+
+formatters:
+  enable:
+    - gofmt
+  # goimports deferred: local-prefix rewrite would churn existing imports in this lane.

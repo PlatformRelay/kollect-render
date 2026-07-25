@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/platformrelay/kollect-render/internal/format"
 	"github.com/platformrelay/kollect-render/internal/render"
 	"github.com/platformrelay/kollect-render/internal/validate"
 )
@@ -48,7 +49,7 @@ func runValidate(args []string) int {
 }
 
 func runRender(args []string) int {
-	format := "markdown"
+	formatName := "markdown"
 	templatePath := ""
 	contextPath := ""
 	outputPath := ""
@@ -57,9 +58,9 @@ func runRender(args []string) int {
 		switch {
 		case a == "--format" && i+1 < len(args):
 			i++
-			format = args[i]
+			formatName = args[i]
 		case strings.HasPrefix(a, "--format="):
-			format = strings.TrimPrefix(a, "--format=")
+			formatName = strings.TrimPrefix(a, "--format=")
 		case a == "--template" && i+1 < len(args):
 			i++
 			templatePath = args[i]
@@ -80,18 +81,13 @@ func runRender(args []string) int {
 			return 2
 		}
 	}
-	if templatePath == "" || contextPath == "" {
-		fmt.Fprintln(os.Stderr, "usage: kollect-render render --format markdown --template <file> --context <file> [--output <file>]")
+	if contextPath == "" {
+		fmt.Fprintln(os.Stderr, "usage: kollect-render render --format <markdown|confluence-storage> --context <file> [--template <file>] [--output <file>]")
 		return 2
 	}
-	if format != "markdown" {
-		// Full format registry lands in E2-S04; markdown is the S03 path.
-		fmt.Fprintf(os.Stderr, "render: unsupported format %q (S03 supports markdown only)\n", format)
-		return 2
-	}
-	tmplBytes, err := os.ReadFile(templatePath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "render: read template: %v\n", err)
+	enc, ok := format.Lookup(formatName)
+	if !ok {
+		fmt.Fprintf(os.Stderr, "render: unsupported format %q (registered: %s)\n", formatName, strings.Join(format.Names(), ", "))
 		return 2
 	}
 	ctx, err := render.LoadContextFile(contextPath)
@@ -99,10 +95,30 @@ func runRender(args []string) int {
 		fmt.Fprintf(os.Stderr, "render: %v\n", err)
 		return 2
 	}
-	out, err := render.Render(string(tmplBytes), ctx)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "render: %v\n", err)
-		return 2
+	var out []byte
+	if templatePath != "" {
+		tmplBytes, err := os.ReadFile(templatePath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "render: read template: %v\n", err)
+			return 2
+		}
+		out, err = render.Render(string(tmplBytes), ctx)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "render: %v\n", err)
+			return 2
+		}
+	} else {
+		// Built-in env-inventory Model → encoder (REQ-E2-S04-01).
+		model, err := format.EnvInventoryModel(ctx)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "render: %v\n", err)
+			return 2
+		}
+		out, err = enc.Encode(model)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "render: encode %s: %v\n", enc.Name(), err)
+			return 2
+		}
 	}
 	if outputPath == "" || outputPath == "-" {
 		if _, err := os.Stdout.Write(out); err != nil {

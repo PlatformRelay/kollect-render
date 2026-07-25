@@ -10,6 +10,7 @@ cd "$root"
 # shellcheck disable=SC2034
 patterns=(
   "esc""-cli"
+  "Ran""cher"
   "TITI""SEVEN"
   "prod""165"
   "rewe"".""cloud"

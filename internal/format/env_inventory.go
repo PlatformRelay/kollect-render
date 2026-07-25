@@ -10,7 +10,7 @@ import (
 // EnvInventoryModel builds the format-agnostic env-inventory page Model from a
 // RenderContext. The same Model feeds every registered encoder (REQ-E2-S04-01).
 func EnvInventoryModel(ctx render.RenderContext) (Model, error) {
-	howTo, _ := ctx.Copy["how-to-change"]
+	howTo := ctx.Copy["how-to-change"]
 	blocks := []Block{
 		Heading{Level: 1, Text: "Environment inventory"},
 		Blank{},

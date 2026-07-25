@@ -76,10 +76,10 @@ func TestRunRenderReportOriginOverride(t *testing.T) {
 	}
 }
 
-func TestRunRenderUpstreamDepsMerge(t *testing.T) {
+func TestRunRenderUpstreamDepsReplace(t *testing.T) {
 	t.Parallel()
 	root := repoRoot(t)
-	// Context with no upstream block — deps file supplies Upstream map.
+	// Context with no upstream block — deps file supplies Upstream map (replace).
 	ctxPath := filepath.Join(t.TempDir(), "context.yaml")
 	base, err := os.ReadFile(filepath.Join(root, "test", "golden", "env-inventory-md", "context.yaml"))
 	if err != nil {
@@ -119,6 +119,50 @@ func TestRunRenderUpstreamDepsMerge(t *testing.T) {
 	}
 	if !strings.Contains(string(body), "upstream 9.9.9") {
 		t.Fatalf("body missing upstream from --upstream-deps:\n%s", body)
+	}
+}
+
+// REQ-E2-S06-01 / P2 residual: --upstream-deps replaces the whole Upstream map
+// (does not merge with context.upstream).
+func TestRunRenderUpstreamDepsReplacesContextUpstream(t *testing.T) {
+	t.Parallel()
+	root := repoRoot(t)
+	ctxPath := filepath.Join(root, "test", "golden", "env-inventory-md", "context.yaml")
+	// Golden context already has event-broker upstream (3.10.0). Deps file replaces
+	// the map with a different component only — old entry must disappear.
+	deps := filepath.Join(t.TempDir(), "upstream-deps.yaml")
+	depsBody := "" +
+		"other-component:\n" +
+		"  observedVersion: \"1.0.0\"\n" +
+		"  sourceURL: https://example.org/other\n" +
+		"  query: datasource=github-releases\n" +
+		"  retrievedAt: \"2026-07-25T01:00:00Z\"\n" +
+		"  evidence: catalog\n" +
+		"  status: observed\n"
+	if err := os.WriteFile(deps, []byte(depsBody), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out := filepath.Join(t.TempDir(), "out.md")
+	code := run([]string{
+		"render",
+		"--format", format.NameMarkdown,
+		"--context", ctxPath,
+		"--upstream-deps", deps,
+		"--output", out,
+	})
+	if code != 0 {
+		t.Fatalf("render exit = %d, want 0", code)
+	}
+	body, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(body)
+	if strings.Contains(s, "upstream 3.10.0") {
+		t.Fatal("--upstream-deps must replace context Upstream, not merge; found old 3.10.0")
+	}
+	if strings.Contains(s, "upstream 9.9.9") {
+		t.Fatal("unexpected leftover version from other tests")
 	}
 }
 

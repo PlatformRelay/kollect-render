@@ -3,6 +3,7 @@ package render
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -46,6 +47,39 @@ func TestLoadUpstreamFileMissing(t *testing.T) {
 	}
 }
 
+func TestLoadUpstreamFileYAMLFail(t *testing.T) {
+	t.Parallel()
+	path := filepath.Join(t.TempDir(), "bad-upstream.yaml")
+	if err := os.WriteFile(path, []byte("event-broker: [\n  - !!broken"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, err := LoadUpstreamFile(path)
+	if err == nil {
+		t.Fatal("expected YAML decode error")
+	}
+	if !strings.Contains(err.Error(), "decode upstream-deps") {
+		t.Fatalf("error = %v, want decode upstream-deps prefix", err)
+	}
+}
+
+func TestLoadUpstreamFileEmptyDocument(t *testing.T) {
+	t.Parallel()
+	path := filepath.Join(t.TempDir(), "empty-upstream.yaml")
+	if err := os.WriteFile(path, []byte(""), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	got, err := LoadUpstreamFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil {
+		t.Fatal("nil map must be initialized to empty")
+	}
+	if len(got) != 0 {
+		t.Fatalf("got = %+v, want empty", got)
+	}
+}
+
 func TestApplyGenerationOverrides(t *testing.T) {
 	t.Parallel()
 	ctx := RenderContext{
@@ -64,6 +98,23 @@ func TestApplyGenerationOverrides(t *testing.T) {
 	}
 	if got.Generation.Origin != "manual" {
 		t.Fatalf("Origin = %q", got.Generation.Origin)
+	}
+}
+
+func TestApplyGenerationOverridesEmptyLeaveUnchanged(t *testing.T) {
+	t.Parallel()
+	ctx := RenderContext{
+		Generation: GenerationMeta{
+			GeneratedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			Origin:      "schedule",
+		},
+	}
+	got, err := ApplyGenerationOverrides(ctx, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.Generation.GeneratedAt.Equal(ctx.Generation.GeneratedAt) || got.Generation.Origin != "schedule" {
+		t.Fatalf("empty overrides mutated context: %+v", got.Generation)
 	}
 }
 

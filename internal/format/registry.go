@@ -1,11 +1,9 @@
 package format
 
-import "fmt"
-
 // Well-known format names (REQ-E2-S04-01).
 const (
-	NameMarkdown           = "markdown"
-	NameConfluenceStorage  = "confluence-storage"
+	NameMarkdown          = "markdown"
+	NameConfluenceStorage = "confluence-storage"
 )
 
 // Encoder turns a Model into format-specific bytes.
@@ -62,22 +60,4 @@ func Names() []string {
 		}
 	}
 	return append(out, rest...)
-}
-
-type markdownEncoder struct{}
-
-func (markdownEncoder) Name() string { return NameMarkdown }
-
-func (markdownEncoder) Encode(m Model) ([]byte, error) {
-	_ = m
-	return nil, fmt.Errorf("format/markdown: not implemented")
-}
-
-type confluenceEncoder struct{}
-
-func (confluenceEncoder) Name() string { return NameConfluenceStorage }
-
-func (confluenceEncoder) Encode(m Model) ([]byte, error) {
-	_ = m
-	return nil, fmt.Errorf("format/confluence-storage: not implemented")
 }

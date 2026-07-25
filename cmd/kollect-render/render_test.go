@@ -1,10 +1,14 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/platformrelay/kollect-render/internal/artifact"
 	"github.com/platformrelay/kollect-render/internal/format"
 )
 
@@ -132,5 +136,93 @@ func TestRunRenderModelMarkdown(t *testing.T) {
 	}
 	if string(got) != string(want) {
 		t.Fatalf("CLI model-markdown golden mismatch")
+	}
+}
+
+func TestRunRenderWritesArtifactSidecar(t *testing.T) {
+	t.Parallel()
+	root := repoRoot(t)
+	ctx := filepath.Join(root, "test", "golden", "env-inventory-md", "context.yaml")
+	out := filepath.Join(t.TempDir(), "page.storage.xml")
+	code := run([]string{
+		"render",
+		"--format", format.NameConfluenceStorage,
+		"--context", ctx,
+		"--output", out,
+	})
+	if code != 0 {
+		t.Fatalf("render exit = %d, want 0", code)
+	}
+	body, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	sidePath := artifact.SidecarPath(out)
+	raw, err := os.ReadFile(sidePath)
+	if err != nil {
+		t.Fatalf("sidecar missing at %s: %v", sidePath, err)
+	}
+	var sc artifact.Sidecar
+	if err := json.Unmarshal(raw, &sc); err != nil {
+		t.Fatalf("sidecar JSON: %v", err)
+	}
+	sum := sha256.Sum256(body)
+	wantDigest := "sha256:" + hex.EncodeToString(sum[:])
+	if sc.ContentDigest != wantDigest {
+		t.Fatalf("sidecar contentDigest = %q, want %q", sc.ContentDigest, wantDigest)
+	}
+	if sc.Format != format.NameConfluenceStorage {
+		t.Fatalf("sidecar format = %q", sc.Format)
+	}
+	if sc.ByteLength != len(body) {
+		t.Fatalf("sidecar byteLength = %d, want %d", sc.ByteLength, len(body))
+	}
+	if sc.GeneratedAt != "2026-07-21T05:00:00Z" {
+		t.Fatalf("sidecar generatedAt = %q (from fixture Generation)", sc.GeneratedAt)
+	}
+	if sc.Origin != "schedule" || sc.SnapshotSHA != "abcdef0123456789" {
+		t.Fatalf("sidecar lineage = %+v", sc)
+	}
+	if sc.RendererVersion != version {
+		t.Fatalf("sidecar rendererVersion = %q, want %q", sc.RendererVersion, version)
+	}
+	// Determinism: second render → identical body + sidecar.
+	out2 := filepath.Join(t.TempDir(), "page.storage.xml")
+	if code := run([]string{
+		"render",
+		"--format", format.NameConfluenceStorage,
+		"--context", ctx,
+		"--output", out2,
+	}); code != 0 {
+		t.Fatalf("second render exit = %d", code)
+	}
+	body2, err := os.ReadFile(out2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	side2, err := os.ReadFile(artifact.SidecarPath(out2))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(body) != string(body2) {
+		t.Fatal("body not deterministic across renders")
+	}
+	if string(raw) != string(side2) {
+		t.Fatal("sidecar not deterministic across renders")
+	}
+}
+
+func TestRunRenderStdoutSkipsSidecar(t *testing.T) {
+	t.Parallel()
+	root := repoRoot(t)
+	ctx := filepath.Join(root, "test", "golden", "env-inventory-md", "context.yaml")
+	code := run([]string{
+		"render",
+		"--format", format.NameConfluenceStorage,
+		"--context", ctx,
+		"--output", "-",
+	})
+	if code != 0 {
+		t.Fatalf("stdout render exit = %d, want 0", code)
 	}
 }

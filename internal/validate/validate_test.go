@@ -107,9 +107,9 @@ func TestTypoOutsideExtensionsRefused(t *testing.T) {
 
 func assertPointered(t *testing.T, err error, wantPtrSub string) {
 	t.Helper()
-	var res validate.Result
+	var res *validate.Result
 	if !errors.As(err, &res) {
-		t.Fatalf("want validate.Result with JSON pointers, got %T: %v", err, err)
+		t.Fatalf("want *validate.Result with JSON pointers, got %T: %v", err, err)
 	}
 	if len(res.Errors) == 0 {
 		t.Fatal("validate.Result has no Errors")

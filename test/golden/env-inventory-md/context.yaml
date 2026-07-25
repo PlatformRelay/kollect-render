@@ -1,0 +1,130 @@
+# Fixture RenderContext for markdown golden (synthetic; REWE-free).
+# Hostile markup in a component name exercises pass-through for markdown.
+manifest:
+  environmentId: region-a
+  sources:
+    - sourceId: cluster-alpha
+      status: fresh
+    - sourceId: cluster-beta
+      status: stale
+    - sourceId: cluster-gamma
+      status: missing
+docs:
+  - schemaVersion: "0.2.0"
+    metadata:
+      environmentId: region-a
+      sourceId: cluster-alpha
+      collectedAt: "2026-07-21T04:00:12Z"
+    provenance:
+      runId: run-20260721-0400
+      collectionStartedAt: "2026-07-21T04:00:00Z"
+      collectionFinishedAt: "2026-07-21T04:00:12Z"
+      rawPayloadDigest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      collectorVersion: v1.2.3
+      normalizerVersion: v0.3.0
+      configVersion: "git:0123456789ab"
+      schemaDigest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    targetOutcomes:
+      - targetId: platform-components
+        status: collected
+      - targetId: workloads
+        status: collected
+    components:
+      - componentId: event-broker
+        instanceId: platform/event-broker-alpha
+        name: event-broker-alpha
+        kind: example.io/EventBroker
+        namespace: platform
+        version: "3.9.0"
+      - componentId: platform-operator
+        instanceId: platform/operator-alpha
+        name: 'operator <script>alert(1)</script>'
+        kind: example.io/Operator
+        namespace: platform
+        version: "0.47.0"
+    helmReleases:
+      - instanceId: platform/operator-alpha
+        componentId: platform-operator
+        name: operator-alpha
+        namespace: platform
+        chartName: platform-operator
+        chartVersion: "0.47.0"
+        appVersion: "0.47.0"
+        status: deployed
+    workloads:
+      - kind: Deployment
+        name: operator-alpha
+        namespace: platform
+        images:
+          - registry.example.org/platform/operator:0.47.0
+      - kind: StatefulSet
+        name: broker-alpha
+        namespace: messaging
+        images:
+          - registry.example.org/platform/broker:3.9.0
+    nodes:
+      count: 3
+      kubeVersions: ["v1.32.4"]
+  - schemaVersion: "0.2.0"
+    metadata:
+      environmentId: region-a
+      sourceId: cluster-beta
+      collectedAt: "2026-07-20T04:10:47Z"
+      stale:
+        lastGoodAt: "2026-07-20T04:10:47Z"
+        statusCode: unreachable
+    provenance:
+      runId: run-20260720-0408
+      collectionStartedAt: "2026-07-20T04:08:00Z"
+      collectionFinishedAt: "2026-07-20T04:11:00Z"
+      rawPayloadDigest: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      collectorVersion: v1.2.3
+      normalizerVersion: v0.3.0
+      configVersion: "git:fedcba987654"
+      schemaDigest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    targetOutcomes:
+      - targetId: platform-components
+        status: collected
+      - targetId: package-releases
+        status: unsupported
+        errorCode: api-not-served
+    components:
+      - componentId: event-broker
+        instanceId: services/event-broker-beta
+        name: event-broker-beta
+        kind: example.io/EventBroker
+        namespace: services
+        version: "3.8.1"
+    helmReleases: []
+    workloads:
+      - kind: StatefulSet
+        name: event-broker-beta
+        namespace: services
+        images:
+          - registry.example.org/platform/broker:3.8.1
+    nodes:
+      count: 4
+      kubeVersions: ["v1.31.8"]
+upstream:
+  event-broker:
+    observedVersion: "3.10.0"
+    sourceURL: https://example.org/event-broker
+    query: datasource=github-releases
+    retrievedAt: "2026-07-21T03:00:00Z"
+    evidence: catalog
+    status: current
+  platform-operator:
+    observedVersion: "0.47.0"
+    sourceURL: https://example.org/platform-operator
+    query: datasource=helm
+    retrievedAt: "2026-07-21T03:00:00Z"
+    evidence: catalog
+    status: current
+generation:
+  generatedAt: "2026-07-21T05:00:00Z"
+  origin: schedule
+  snapshotSHA: abcdef0123456789
+  sourceRepoURL: https://example.org/inventory-snapshots
+copy:
+  how-to-change: "Edit approved templates in the private inventory repo; do not edit this page by hand."
+  legend: "Status glyphs are informational only."

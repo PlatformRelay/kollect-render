@@ -68,8 +68,11 @@ func TestRunRenderReportOriginOverride(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(body), "manual") {
+	if !strings.Contains(string(body), "origin <code>manual</code>") {
 		t.Fatal("body must use --report-origin override in banner")
+	}
+	if strings.Contains(string(body), "origin <code>schedule</code>") {
+		t.Fatal("body must not keep context Generation.Origin when overridden")
 	}
 }
 

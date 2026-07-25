@@ -56,6 +56,9 @@ func runRender(args []string) int {
 	templatePath := ""
 	contextPath := ""
 	outputPath := ""
+	upstreamDepsPath := ""
+	generatedAt := ""
+	reportOrigin := ""
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		switch {
@@ -79,13 +82,28 @@ func runRender(args []string) int {
 			outputPath = args[i]
 		case strings.HasPrefix(a, "--output="):
 			outputPath = strings.TrimPrefix(a, "--output=")
+		case a == "--upstream-deps" && i+1 < len(args):
+			i++
+			upstreamDepsPath = args[i]
+		case strings.HasPrefix(a, "--upstream-deps="):
+			upstreamDepsPath = strings.TrimPrefix(a, "--upstream-deps=")
+		case a == "--generated-at" && i+1 < len(args):
+			i++
+			generatedAt = args[i]
+		case strings.HasPrefix(a, "--generated-at="):
+			generatedAt = strings.TrimPrefix(a, "--generated-at=")
+		case a == "--report-origin" && i+1 < len(args):
+			i++
+			reportOrigin = args[i]
+		case strings.HasPrefix(a, "--report-origin="):
+			reportOrigin = strings.TrimPrefix(a, "--report-origin=")
 		default:
 			fmt.Fprintf(os.Stderr, "render: unknown argument %s\n", a)
 			return 2
 		}
 	}
 	if contextPath == "" {
-		fmt.Fprintln(os.Stderr, "usage: kollect-render render --format <markdown|confluence-storage> --context <file> [--template <file>] [--output <file>]")
+		fmt.Fprintln(os.Stderr, "usage: kollect-render render --format <markdown|confluence-storage> --context <file> [--template <file>] [--output <file>] [--upstream-deps <file>] [--generated-at <RFC3339>] [--report-origin <label>]")
 		fmt.Fprintln(os.Stderr, "note: --template is markdown-only; omit it to encode via the format registry (Model → encoder)")
 		return 2
 	}
@@ -102,6 +120,19 @@ func runRender(args []string) int {
 		return 2
 	}
 	ctx, err := render.LoadContextFile(contextPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "render: %v\n", err)
+		return 2
+	}
+	if upstreamDepsPath != "" {
+		up, err := render.LoadUpstreamFile(upstreamDepsPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "render: %v\n", err)
+			return 2
+		}
+		ctx.Upstream = up
+	}
+	ctx, err = render.ApplyGenerationOverrides(ctx, generatedAt, reportOrigin)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "render: %v\n", err)
 		return 2

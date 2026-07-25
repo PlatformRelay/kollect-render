@@ -30,6 +30,23 @@ go run ./cmd/kollect-render render --format markdown --template test/golden/env-
 
 Requires Go (see `go.mod`) and [Task](https://taskfile.dev/).
 
+## CLI
+
+| Command / flag | Role |
+| --- | --- |
+| `validate <document>` | Schema-validate an inventory document; exit `0` ok / `2` fatal |
+| `render` | Deterministic render; exit `0` ok / `2` fatal |
+| `--format` | `markdown` or `confluence-storage` (default `markdown`) |
+| `--context` | RenderContext YAML/JSON (required) |
+| `--template` | Optional markdown `text/template` (markdown format only) |
+| `--output` | Body path, or `-` / omit for stdout (file output also writes `.meta.json`) |
+| `--upstream-deps` | Replace `Upstream` with a `map[componentID]UpstreamEntry` YAML file |
+| `--generated-at` | Override `Generation.GeneratedAt` (RFC3339 UTC) |
+| `--report-origin` | Override `Generation.Origin` (e.g. `schedule`, `manual`, `ci`) |
+
+Completeness / catalog policy stays with the private aggregator; this CLI only applies the
+flags above to an already-shaped render context.
+
 ## Golden tests
 
 Fixture → expected output suites live under `test/golden/`. To regenerate committed goldens after an

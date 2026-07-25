@@ -1,0 +1,10 @@
+bin/
+dist/
+*.out
+coverage*
+.git/
+.github/
+agent-context/
+*.md
+!README.md
+!LICENSE

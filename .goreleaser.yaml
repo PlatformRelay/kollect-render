@@ -1,0 +1,86 @@
+# GoReleaser config for kollect-render (REQ-E2-S07-02).
+# Trigger: push tag vX.Y.Z → .github/workflows/release.yaml
+version: 2
+
+project_name: kollect-render
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: kollect-render
+    main: ./cmd/kollect-render
+    binary: kollect-render
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+dockers_v2:
+  - id: kollect-render
+    ids:
+      - kollect-render
+    dockerfile: Dockerfile
+    images:
+      - ghcr.io/platformrelay/kollect-render
+    tags:
+      - "{{ .Tag }}"
+      - "{{ .Major }}.{{ .Minor }}"
+      - latest
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      org.opencontainers.image.title: kollect-render
+      org.opencontainers.image.description: Credential-free inventory renderer
+      org.opencontainers.image.source: https://github.com/PlatformRelay/kollect-render
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.licenses: MIT
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+
+release:
+  github:
+    owner: PlatformRelay
+    name: kollect-render
+  draft: false
+  prerelease: auto
+  name_template: "kollect-render {{.Tag}}"

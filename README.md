@@ -2,6 +2,8 @@
 
 Credential-free CLI that validates versioned inventory documents and renders them to
 deterministic artifacts (markdown, confluence-storage, and more as the format registry grows).
+File outputs include a `.meta.json` digest/metadata sidecar for private publishers; this tool
+never opens network connections or holds publish credentials.
 
 This repository is the public Open Source renderer for the PlatformRelay inventory protocol.
 Collection, scheduling, credentials, and publishing stay in private callers; this tool only
@@ -10,7 +12,8 @@ transforms documents you already have.
 ## Status
 
 v0.0.0-dev. `validate` and `render` are available; output formats register at compile time
-(`markdown`, `confluence-storage`).
+(`markdown`, `confluence-storage`). Writing `--output <file>` emits `<file>.meta.json`
+(content digest + generation metadata) for the private publisher contract.
 
 ## Quick start
 

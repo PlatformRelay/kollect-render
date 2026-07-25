@@ -1,10 +1,13 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/platformrelay/kollect-render/internal/artifact"
 	"github.com/platformrelay/kollect-render/internal/format"
 	"github.com/platformrelay/kollect-render/internal/render"
 	"github.com/platformrelay/kollect-render/internal/validate"
@@ -104,12 +107,15 @@ func runRender(args []string) int {
 		return 2
 	}
 	var out []byte
+	templateDigest := ""
 	if templatePath != "" {
 		tmplBytes, err := os.ReadFile(templatePath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "render: read template: %v\n", err)
 			return 2
 		}
+		sum := sha256.Sum256(tmplBytes)
+		templateDigest = "sha256:" + hex.EncodeToString(sum[:])
 		out, err = render.Render(string(tmplBytes), ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "render: %v\n", err)
@@ -135,8 +141,18 @@ func runRender(args []string) int {
 		}
 		return 0
 	}
-	if err := os.WriteFile(outputPath, out, 0o644); err != nil {
-		fmt.Fprintf(os.Stderr, "render: write output: %v\n", err)
+	// File output: body + digest/metadata sidecar for the private publisher (REQ-E2-S05-01).
+	meta := artifact.Meta{
+		Format:          formatName,
+		GeneratedAt:     render.FmtTime(ctx.Generation.GeneratedAt),
+		Origin:          ctx.Generation.Origin,
+		SnapshotSHA:     ctx.Generation.SnapshotSHA,
+		SourceRepoURL:   ctx.Generation.SourceRepoURL,
+		TemplateDigest:  templateDigest,
+		RendererVersion: version,
+	}
+	if _, err := artifact.Write(outputPath, out, meta); err != nil {
+		fmt.Fprintf(os.Stderr, "render: write artifact: %v\n", err)
 		return 2
 	}
 	return 0

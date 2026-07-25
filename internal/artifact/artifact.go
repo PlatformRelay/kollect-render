@@ -3,7 +3,11 @@
 package artifact
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"os"
 )
 
 // SchemaVersion pins the sidecar JSON shape for E5 consumers.
@@ -37,35 +41,63 @@ type Sidecar struct {
 	RendererVersion string `json:"rendererVersion,omitempty"`
 }
 
-// ContentDigest returns sha256:<hex> over body (stub until implemented).
+// ContentDigest returns sha256:<hex> over body.
 func ContentDigest(body []byte) string {
-	_ = body
-	return ""
+	if body == nil {
+		body = []byte{}
+	}
+	sum := sha256.Sum256(body)
+	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
-// Build constructs a sidecar for body + meta (stub until implemented).
+// Build constructs a sidecar for body + meta.
 func Build(body []byte, meta Meta) Sidecar {
-	_ = body
-	_ = meta
-	return Sidecar{}
+	if body == nil {
+		body = []byte{}
+	}
+	return Sidecar{
+		SchemaVersion:   SchemaVersion,
+		ContentDigest:   ContentDigest(body),
+		Format:          meta.Format,
+		ByteLength:      len(body),
+		GeneratedAt:     meta.GeneratedAt,
+		Origin:          meta.Origin,
+		SnapshotSHA:     meta.SnapshotSHA,
+		SourceRepoURL:   meta.SourceRepoURL,
+		TemplateDigest:  meta.TemplateDigest,
+		RendererVersion: meta.RendererVersion,
+	}
 }
 
-// MarshalSidecar returns deterministic JSON bytes for s (stub until implemented).
+// MarshalSidecar returns deterministic JSON bytes for s (2-space indent + trailing newline).
 func MarshalSidecar(s Sidecar) ([]byte, error) {
-	_ = s
-	return nil, fmt.Errorf("artifact.MarshalSidecar: not implemented")
+	b, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshal sidecar: %w", err)
+	}
+	return append(b, '\n'), nil
 }
 
-// SidecarPath returns the companion path for a body file (stub until implemented).
+// SidecarPath returns the companion metadata path for a body file.
 func SidecarPath(bodyPath string) string {
-	_ = bodyPath
-	return ""
+	return bodyPath + SidecarSuffix
 }
 
-// Write writes body to bodyPath and the sidecar to SidecarPath(bodyPath) (stub until implemented).
+// Write writes body to bodyPath and the sidecar to SidecarPath(bodyPath).
 func Write(bodyPath string, body []byte, meta Meta) (Sidecar, error) {
-	_ = bodyPath
-	_ = body
-	_ = meta
-	return Sidecar{}, fmt.Errorf("artifact.Write: not implemented")
+	if bodyPath == "" {
+		return Sidecar{}, fmt.Errorf("artifact.Write: empty body path")
+	}
+	sc := Build(body, meta)
+	raw, err := MarshalSidecar(sc)
+	if err != nil {
+		return Sidecar{}, err
+	}
+	if err := os.WriteFile(bodyPath, body, 0o644); err != nil {
+		return Sidecar{}, fmt.Errorf("write body: %w", err)
+	}
+	if err := os.WriteFile(SidecarPath(bodyPath), raw, 0o644); err != nil {
+		return Sidecar{}, fmt.Errorf("write sidecar: %w", err)
+	}
+	return sc, nil
 }

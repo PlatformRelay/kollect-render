@@ -1,0 +1,47 @@
+# --- Local-only working material: never committed ---
+/agent-context/
+.cursor/
+.agents/
+.claude/
+CLAUDE.md
+AGENTS.md
+AGENTS.local.md
+*.plan.md
+.idea/
+.vscode/
+.DS_Store
+.cache
+
+# --- Secrets / credentials: never commit ---
+.env
+.env.*
+.envrc
+.envrc.*
+*.env
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+
+# --- Go / build artifacts ---
+/bin/
+/dist/
+/artifacts/
+*.test
+*.out
+cover.out
+coverage.out
+coverage.html
+__debug_bin*
+testbin/
+*.exe
+*.so
+vendor/
+
+# --- Local Go test caches ---
+.gocache/
+.gotmp/
+
+# --- Tooling caches ---
+/.task/

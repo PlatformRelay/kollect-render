@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: "3"
+
+set:
+  - pipefail
+
+run: once
+
+env:
+  CGO_ENABLED: "0"
+
+tasks:
+  default:
+    desc: Run the full local check gate
+    cmds:
+      - task: check
+
+  fmt:
+    desc: Format Go sources
+    cmds:
+      - gofmt -w .
+
+  fmt-check:
+    desc: Fail if gofmt would change files
+    cmds:
+      - |
+        out="$(gofmt -l .)"
+        if [[ -n "$out" ]]; then
+          echo "gofmt needed on:" >&2
+          echo "$out" >&2
+          exit 1
+        fi
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - go test ./...
+
+  build:
+    desc: Build the CLI binary
+    cmds:
+      - mkdir -p bin
+      - go build -o bin/kollect-render ./cmd/kollect-render
+
+  rewe-trace:
+    desc: Fail if forbidden internal markers appear in tracked files
+    cmds:
+      - bash hack/rewe-trace.sh
+
+  check:
+    desc: Local gate — fmt, vet, test, build, REWE-trace
+    cmds:
+      - task: fmt-check
+      - task: vet
+      - task: test
+      - task: build
+      - task: rewe-trace

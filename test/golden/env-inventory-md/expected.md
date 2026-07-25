@@ -10,27 +10,37 @@
 - `cluster-alpha` — fresh ◽
 - `cluster-beta` — stale ⚠️
 - `cluster-gamma` — missing ◽
+
 ## Components
 ### region-a / cluster-alpha {#region-a-cluster-alpha}
 Collected: 2026-07-21T04:00:12Z
 - **event-broker-alpha** (`event-broker`): 3.9.0 · upstream 3.10.0 (minor) · status current
 - **operator <script>alert(1)</script>** (`platform-operator`): 0.47.0 · upstream 0.47.0 (same) · status current
+
 - helm `operator-alpha` 0.47.0 (deployed)
+
 #### Workloads in `messaging`
 - StatefulSet/broker-alpha: registry.example.org/platform/broker:3.9.0
+
 #### Workloads in `platform`
 - Deployment/operator-alpha: registry.example.org/platform/operator:0.47.0
+
 Nodes: 3 (v1.32.4)
 - target `platform-components`: collected
 - target `workloads`: collected
+
 ### region-a / cluster-beta {#region-a-cluster-beta}
 Collected: 2026-07-20T04:10:47Z
 - **event-broker-beta** (`event-broker`): 3.8.1 · upstream 3.10.0 (minor) · status current
+
+
 #### Workloads in `services`
 - StatefulSet/event-broker-beta: registry.example.org/platform/broker:3.8.1
+
 Nodes: 4 (v1.31.8)
 - target `platform-components`: collected
 - target `package-releases`: unsupported (api-not-served)
+
 (list capped at 3 entries)
 
 _Health values reflect state at collection time — documentation, not monitoring._

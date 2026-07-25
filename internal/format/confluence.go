@@ -66,13 +66,17 @@ func writeConfluenceBlock(b *strings.Builder, block Block) error {
 		b.WriteByte('\n')
 	case Paragraph:
 		b.WriteString("<p>")
-		writeConfluenceInlines(b, v.Inlines)
+		if err := writeConfluenceInlines(b, v.Inlines); err != nil {
+			return err
+		}
 		b.WriteString("</p>\n")
 	case BulletList:
 		b.WriteString("<ul>\n")
 		for _, item := range v.Items {
 			b.WriteString("<li><p>")
-			writeConfluenceInlines(b, item)
+			if err := writeConfluenceInlines(b, item); err != nil {
+				return err
+			}
 			b.WriteString("</p></li>\n")
 		}
 		b.WriteString("</ul>\n")
@@ -103,7 +107,7 @@ func writeConfluenceBlock(b *strings.Builder, block Block) error {
 	return nil
 }
 
-func writeConfluenceInlines(b *strings.Builder, inlines []Inline) {
+func writeConfluenceInlines(b *strings.Builder, inlines []Inline) error {
 	for _, in := range inlines {
 		switch v := in.(type) {
 		case Text:
@@ -116,8 +120,11 @@ func writeConfluenceInlines(b *strings.Builder, inlines []Inline) {
 			fmt.Fprintf(b, `<a href="%s">%s</a>`, escapeXML(v.URL), escapeXML(v.Text))
 		case Emoji:
 			b.WriteString(escapeXML(v.S))
+		default:
+			return fmt.Errorf("confluence-storage: unknown inline %T (no raw-safe bypass)", in)
 		}
 	}
+	return nil
 }
 
 func writeStatusMacro(b *strings.Builder, colour, title string) {

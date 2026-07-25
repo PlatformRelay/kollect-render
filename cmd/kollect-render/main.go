@@ -83,11 +83,19 @@ func runRender(args []string) int {
 	}
 	if contextPath == "" {
 		fmt.Fprintln(os.Stderr, "usage: kollect-render render --format <markdown|confluence-storage> --context <file> [--template <file>] [--output <file>]")
+		fmt.Fprintln(os.Stderr, "note: --template is markdown-only; omit it to encode via the format registry (Model → encoder)")
 		return 2
 	}
 	enc, ok := format.Lookup(formatName)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "render: unsupported format %q (registered: %s)\n", formatName, strings.Join(format.Names(), ", "))
+		return 2
+	}
+	// Templates are text/template markdown sources. Non-markdown formats must use the
+	// registry Encode path (no --template); never silently ignore --format.
+	if templatePath != "" && formatName != format.NameMarkdown {
+		fmt.Fprintf(os.Stderr, "render: --template requires --format %s (got %q); omit --template to encode %s via the registry\n",
+			format.NameMarkdown, formatName, formatName)
 		return 2
 	}
 	ctx, err := render.LoadContextFile(contextPath)

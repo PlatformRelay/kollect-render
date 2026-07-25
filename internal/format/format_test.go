@@ -3,6 +3,7 @@ package format_test
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -139,16 +140,49 @@ func TestConfluenceStoragePublishReadyShape(t *testing.T) {
 			t.Fatalf("publish-ready shape missing %q", c)
 		}
 	}
+	if err := format.ValidateStorageFragment(s); err != nil {
+		t.Fatalf("storage fragment not well-formed: %v", err)
+	}
+}
+
+func TestValidateStorageFragmentRejectsBroken(t *testing.T) {
+	t.Parallel()
+	if err := format.ValidateStorageFragment(`<p>unclosed`); err == nil {
+		t.Fatal("expected error for unclosed tag")
+	}
+	if err := format.ValidateStorageFragment(""); err == nil {
+		t.Fatal("expected error for empty fragment")
+	}
 }
 
 func TestNoRawSafeBypassInAPI(t *testing.T) {
 	t.Parallel()
-	// Guardrail: Model only accepts typed inlines — there is no HTML/Raw field.
-	var _ format.Inline = format.Text{}
-	var _ format.Inline = format.Strong{}
-	var _ format.Inline = format.Code{}
-	var _ format.Inline = format.Link{}
-	var _ format.Inline = format.Emoji{}
+	// Allowed Inline concrete types only — extending requires an escaped encoder arm.
+	allowed := map[string]struct{}{
+		"Text": {}, "Strong": {}, "Code": {}, "Link": {}, "Emoji": {},
+	}
+	for _, in := range []format.Inline{
+		format.Text{}, format.Strong{}, format.Code{}, format.Link{}, format.Emoji{},
+	} {
+		name := reflect.TypeOf(in).Name()
+		if _, ok := allowed[name]; !ok {
+			t.Fatalf("unexpected Inline concrete type %q", name)
+		}
+		delete(allowed, name)
+	}
+	if len(allowed) != 0 {
+		t.Fatalf("missing Inline coverage: %v", allowed)
+	}
+
+	// Source guard: model.go must not grow a Raw/HTML/Unsafe bypass type.
+	src := mustRead(t, filepath.Join(repoRoot(t), "internal", "format", "model.go"))
+	for _, bad := range []string{
+		"type Raw ", "type HTML ", "type Unsafe", "template.HTML", "type RawHTML",
+	} {
+		if strings.Contains(src, bad) {
+			t.Fatalf("raw-safe bypass marker %q found in model.go", bad)
+		}
+	}
 }
 
 func goldenRoot(t *testing.T) string {

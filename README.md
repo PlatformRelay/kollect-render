@@ -17,8 +17,12 @@ v0.0.0-dev. `validate` and `render` are available; output formats register at co
 ```bash
 task check          # fmt, vet, test, build, REWE-trace gate
 go run ./cmd/kollect-render version
+# Built-in Model → encoder (any registered format):
 go run ./cmd/kollect-render render --format markdown --context test/golden/env-inventory-md/context.yaml
 go run ./cmd/kollect-render render --format confluence-storage --context test/golden/env-inventory-md/context.yaml
+# Custom markdown template ( --format must be markdown ):
+go run ./cmd/kollect-render render --format markdown --template test/golden/env-inventory-md/template.md.tmpl \
+  --context test/golden/env-inventory-md/context.yaml
 ```
 
 Requires Go (see `go.mod`) and [Task](https://taskfile.dev/).

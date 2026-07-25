@@ -31,6 +31,27 @@ func TestRunRenderUnknownFormat(t *testing.T) {
 	}
 }
 
+func TestRunRenderRejectsTemplateWithNonMarkdownFormat(t *testing.T) {
+	t.Parallel()
+	root := repoRoot(t)
+	tmpl := filepath.Join(root, "test", "golden", "env-inventory-md", "template.md.tmpl")
+	ctx := filepath.Join(root, "test", "golden", "env-inventory-md", "context.yaml")
+	out := filepath.Join(t.TempDir(), "out.storage.xml")
+	code := run([]string{
+		"render",
+		"--format", format.NameConfluenceStorage,
+		"--template", tmpl,
+		"--context", ctx,
+		"--output", out,
+	})
+	if code != 2 {
+		t.Fatalf("confluence-storage+template exit = %d, want 2 (must not silently emit markdown)", code)
+	}
+	if _, err := os.Stat(out); err == nil {
+		t.Fatal("must not write output when format+template are incompatible")
+	}
+}
+
 func TestRunRenderGoldenMarkdown(t *testing.T) {
 	t.Parallel()
 	root := repoRoot(t)

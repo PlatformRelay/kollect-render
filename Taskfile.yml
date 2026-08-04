@@ -9,8 +9,11 @@ run: once
 
 vars:
   COVERAGE_MIN: "90"
+  # renovate: datasource=github-releases depName=fe3dback/go-arch-lint
   GO_ARCH_LINT_VERSION: v1.15.0
+  # renovate: datasource=github-releases depName=golangci/golangci-lint
   GOLANGCI_LINT_VERSION: v2.12.2
+  # renovate: datasource=github-releases depName=gitleaks/gitleaks
   GITLEAKS_VERSION: "8.30.1"
 
 env:

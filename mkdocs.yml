@@ -1,0 +1,62 @@
+site_name: kollect-render
+site_description: Credential-free CLI that validates inventory documents and renders deterministic artifacts.
+site_url: https://platformrelay.github.io/kollect-render/
+repo_url: https://github.com/PlatformRelay/kollect-render
+repo_name: PlatformRelay/kollect-render
+copyright: Copyright &copy; 2026 Konrad Heimel
+
+strict: true
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.path
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - CLI reference: cli-reference.md
+  - Output formats: formats.md
+  - Inventory schema: schema.md
+  - Development: development.md
+  - Security: security.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+validation:
+  omitted_files: warn
+  unrecognized_links: warn
+  absolute_links: relative_to_docs

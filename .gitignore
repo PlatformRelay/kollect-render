@@ -46,3 +46,7 @@ vendor/
 
 # --- Tooling caches ---
 /.task/
+
+# --- Docs site (local MkDocs build) ---
+/.venv-docs/
+/site/

@@ -17,6 +17,9 @@ jobs:
     name: check
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # Codecov OIDC upload; GitHub App still required for reliable PR comments
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -104,6 +107,14 @@ jobs:
             coverage.out
             coverage-summary.txt
           if-no-files-found: error
+
+      - name: Upload coverage to Codecov
+        if: success()
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          files: coverage.out
+          fail_ci_if_error: false
+          use_oidc: true
 
   # Full history required: git-cliff compares CHANGELOG.md to regenerated output
   # from tags + commits. Kept separate from `check` (shallow checkout).

@@ -11,6 +11,8 @@ on the default branch using [git-cliff](https://git-cliff.org/).
 
 ### Bug Fixes
 
+- **docs:** Correct template threat model in SECURITY [cc872a5](https://github.com/platformrelay/kollect-render/commit/cc872a58f202af893a03970ebdbe64304f59bb11)
+
 - **ci:** SHA-pin workflow actions and HTTPS-harden gitleaks fetch [134399b](https://github.com/platformrelay/kollect-render/commit/134399bf8275be0acc308b3ee9bf2264c5e44b84)
 
 

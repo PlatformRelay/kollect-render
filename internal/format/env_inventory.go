@@ -25,18 +25,9 @@ func EnvInventoryModel(ctx render.RenderContext) (Model, error) {
 		Blank{},
 		StatusLegend{},
 		Blank{},
-		Heading{Level: 2, Text: "Sources"},
 	}
-
-	srcItems := make([][]Inline, 0, len(ctx.Manifest.Sources))
-	for _, s := range ctx.Manifest.Sources {
-		srcItems = append(srcItems, []Inline{
-			Code{S: s.SourceID},
-			Text{S: " — " + s.Status + " "},
-			Emoji{S: render.StatusEmoji(s.Status)},
-		})
-	}
-	blocks = append(blocks, BulletList{Items: srcItems}, Blank{}, Heading{Level: 2, Text: "Components"})
+	blocks = append(blocks, sourcesBlocks(ctx)...)
+	blocks = append(blocks, Heading{Level: 2, Text: "Components"})
 
 	for _, doc := range ctx.Docs {
 		anchorID := render.Anchor(fmt.Sprintf("%s-%s", doc.Metadata.EnvironmentID, doc.Metadata.SourceID))
@@ -49,81 +40,29 @@ func EnvInventoryModel(ctx render.RenderContext) (Model, error) {
 			Text{S: "Collected: " + render.FmtTime(doc.Metadata.CollectedAt)},
 		}})
 
-		comps, err := render.SortBy("ComponentID", doc.Components)
+		compItems, err := componentItems(ctx, doc)
 		if err != nil {
 			return Model{}, err
-		}
-		compSlice, ok := comps.([]render.Component)
-		if !ok {
-			return Model{}, fmt.Errorf("format: unexpected components type %T", comps)
-		}
-		compItems := make([][]Inline, 0, len(compSlice))
-		for _, c := range compSlice {
-			item := []Inline{
-				Strong{S: c.Name},
-				Text{S: " ("},
-				Code{S: c.ComponentID},
-				Text{S: "): " + c.Version},
-			}
-			if up, ok := ctx.Upstream[c.ComponentID]; ok {
-				item = append(item,
-					Text{S: " · upstream " + up.ObservedVersion + " (" + render.VersionDifference(c.Version, up.ObservedVersion) + ") · status " + up.Status},
-				)
-			}
-			compItems = append(compItems, item)
 		}
 		if len(compItems) > 0 {
 			blocks = append(blocks, BulletList{Items: compItems})
 		}
 
-		helms, err := render.SortBy("Name", doc.HelmReleases)
+		hItems, err := helmItems(doc)
 		if err != nil {
 			return Model{}, err
 		}
-		helmSlice, ok := helms.([]render.HelmRelease)
-		if !ok {
-			return Model{}, fmt.Errorf("format: unexpected helm type %T", helms)
-		}
-		helmItems := make([][]Inline, 0, len(helmSlice))
-		for _, h := range helmSlice {
-			helmItems = append(helmItems, []Inline{
-				Text{S: "helm "},
-				Code{S: h.Name},
-				Text{S: " " + h.ChartVersion + " (" + h.Status + ")"},
-			})
-		}
-		if len(helmItems) > 0 {
-			blocks = append(blocks, Blank{}, BulletList{Items: helmItems}, Blank{})
+		if len(hItems) > 0 {
+			blocks = append(blocks, Blank{}, BulletList{Items: hItems}, Blank{})
 		} else {
 			blocks = append(blocks, Blank{}, Blank{})
 		}
 
-		groups, err := render.GroupBy("Namespace", doc.Workloads)
+		wl, err := workloadBlocks(doc)
 		if err != nil {
 			return Model{}, err
 		}
-		groupSlice, ok := groups.([]render.Group)
-		if !ok {
-			return Model{}, fmt.Errorf("format: unexpected group type %T", groups)
-		}
-		for _, g := range groupSlice {
-			blocks = append(blocks, Heading{Level: 4, Text: "Workloads in `" + g.Key + "`"})
-			wlSorted, err := render.SortBy("Name", g.Items)
-			if err != nil {
-				return Model{}, err
-			}
-			wlSlice, ok := wlSorted.([]render.Workload)
-			if !ok {
-				return Model{}, fmt.Errorf("format: unexpected workload type %T", wlSorted)
-			}
-			wlItems := make([][]Inline, 0, len(wlSlice))
-			for _, w := range wlSlice {
-				wlItems = append(wlItems, []Inline{
-					Text{S: w.Kind + "/" + w.Name + ": " + strings.Join(w.Images, ", ")},
-				})
-			}
-			blocks = append(blocks, BulletList{Items: wlItems}, Blank{})
-		}
+		blocks = append(blocks, wl...)
 
 		kube := strings.Join(doc.Nodes.KubeVersions, ", ")
 		blocks = append(blocks, Paragraph{Inlines: []Inline{
@@ -154,4 +93,99 @@ func EnvInventoryModel(ctx render.RenderContext) (Model, error) {
 		Footnote{Text: "Health values reflect state at collection time — documentation, not monitoring."},
 	)
 	return Model{Blocks: blocks}, nil
+}
+
+func sourcesBlocks(ctx render.RenderContext) []Block {
+	srcItems := make([][]Inline, 0, len(ctx.Manifest.Sources))
+	for _, s := range ctx.Manifest.Sources {
+		srcItems = append(srcItems, []Inline{
+			Code{S: s.SourceID},
+			Text{S: " — " + s.Status + " "},
+			Emoji{S: render.StatusEmoji(s.Status)},
+		})
+	}
+	return []Block{
+		Heading{Level: 2, Text: "Sources"},
+		BulletList{Items: srcItems},
+		Blank{},
+	}
+}
+
+func componentItems(ctx render.RenderContext, doc render.InventoryDocument) ([][]Inline, error) {
+	compSlice, err := sortedAs[render.Component]("ComponentID", doc.Components)
+	if err != nil {
+		return nil, err
+	}
+	compItems := make([][]Inline, 0, len(compSlice))
+	for _, c := range compSlice {
+		item := []Inline{
+			Strong{S: c.Name},
+			Text{S: " ("},
+			Code{S: c.ComponentID},
+			Text{S: "): " + c.Version},
+		}
+		if up, ok := ctx.Upstream[c.ComponentID]; ok {
+			item = append(item,
+				Text{S: " · upstream " + up.ObservedVersion + " (" + render.VersionDifference(c.Version, up.ObservedVersion) + ") · status " + up.Status},
+			)
+		}
+		compItems = append(compItems, item)
+	}
+	return compItems, nil
+}
+
+func helmItems(doc render.InventoryDocument) ([][]Inline, error) {
+	helmSlice, err := sortedAs[render.HelmRelease]("Name", doc.HelmReleases)
+	if err != nil {
+		return nil, err
+	}
+	items := make([][]Inline, 0, len(helmSlice))
+	for _, h := range helmSlice {
+		items = append(items, []Inline{
+			Text{S: "helm "},
+			Code{S: h.Name},
+			Text{S: " " + h.ChartVersion + " (" + h.Status + ")"},
+		})
+	}
+	return items, nil
+}
+
+func workloadBlocks(doc render.InventoryDocument) ([]Block, error) {
+	groups, err := render.GroupBy("Namespace", doc.Workloads)
+	if err != nil {
+		return nil, err
+	}
+	groupSlice, ok := groups.([]render.Group)
+	if !ok {
+		return nil, fmt.Errorf("format: unexpected %T, want %T", groups, []render.Group{})
+	}
+	var blocks []Block
+	for _, g := range groupSlice {
+		blocks = append(blocks, Heading{Level: 4, Text: "Workloads in `" + g.Key + "`"})
+		wlSlice, err := sortedAs[render.Workload]("Name", g.Items)
+		if err != nil {
+			return nil, err
+		}
+		wlItems := make([][]Inline, 0, len(wlSlice))
+		for _, w := range wlSlice {
+			wlItems = append(wlItems, []Inline{
+				Text{S: w.Kind + "/" + w.Name + ": " + strings.Join(w.Images, ", ")},
+			})
+		}
+		blocks = append(blocks, BulletList{Items: wlItems}, Blank{})
+	}
+	return blocks, nil
+}
+
+// sortedAs sorts in by key via render.SortBy and asserts the result as []T.
+func sortedAs[T any](key string, in any) ([]T, error) {
+	sorted, err := render.SortBy(key, in)
+	if err != nil {
+		return nil, err
+	}
+	out, ok := sorted.([]T)
+	if !ok {
+		return nil, fmt.Errorf("format: unexpected %T, want %T", sorted, []T{})
+	}
+	return out, nil
 }

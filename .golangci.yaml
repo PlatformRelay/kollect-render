@@ -66,11 +66,6 @@ linters:
         linters:
           - gosec
           - gocyclo
-      # EnvInventoryModel split is lane e4-s04; keep the repo floor at 20 without
-      # owning that file here. Remove this exclusion when e4-s04 lands.
-      - path: internal/format/env_inventory\.go
-        linters:
-          - gocyclo
       - text: "stutters"
         linters:
           - revive

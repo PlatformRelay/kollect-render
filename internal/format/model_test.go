@@ -1,6 +1,9 @@
 package format
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // Marker methods exist only for interface satisfaction; call them so coverage
 // counts the statements (type switches never invoke them).
@@ -25,8 +28,13 @@ func TestEncodeUnsupportedBlock(t *testing.T) {
 	if _, err := (markdownEncoder{}).Encode(bad); err == nil {
 		t.Fatal("markdown: want unsupported block error")
 	}
-	if _, err := (confluenceEncoder{}).Encode(bad); err == nil {
+	_, err := (confluenceEncoder{}).Encode(bad)
+	if err == nil {
 		t.Fatal("confluence: want unsupported block error")
+	}
+	const want = "confluence-storage: unsupported block"
+	if got := err.Error(); !strings.Contains(got, want) {
+		t.Fatalf("confluence error = %q, want substring %q", got, want)
 	}
 }
 

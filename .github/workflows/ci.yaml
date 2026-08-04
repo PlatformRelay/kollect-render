@@ -105,6 +105,28 @@ jobs:
             coverage-summary.txt
           if-no-files-found: error
 
+  # Full history required: git-cliff compares CHANGELOG.md to regenerated output
+  # from tags + commits. Kept separate from `check` (shallow checkout).
+  changelog:
+    name: changelog
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Task
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: task changelog:verify
+        run: task changelog:verify
+
   # SonarCloud: needs repo secret SONAR_TOKEN. Automatic Analysis must stay off
   # (mutually exclusive with CI analysis + Go coverage). Non-blocking per OD-3 —
   # quality gate is ERROR until E4-S02 clears duplication; continue-on-error so

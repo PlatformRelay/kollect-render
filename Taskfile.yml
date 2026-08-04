@@ -9,6 +9,11 @@ run: once
 
 vars:
   COVERAGE_MIN: "90"
+  BIN_DIR: bin
+  # renovate: datasource=github-releases depName=orhun/git-cliff
+  GIT_CLIFF_VERSION: v2.13.1
+  GIT_CLIFF_BIN: "{{.BIN_DIR}}/git-cliff"
+  CLIFF_CONFIG: hack/release/cliff.toml
   # renovate: datasource=github-releases depName=fe3dback/go-arch-lint
   GO_ARCH_LINT_VERSION: v1.15.0
   # renovate: datasource=github-releases depName=golangci/golangci-lint
@@ -97,6 +102,37 @@ tasks:
     desc: Fail if any workflow action is not pinned to a full commit SHA
     cmds:
       - bash hack/pinned-actions.sh
+
+  tools:git-cliff:
+    desc: Download pinned git-cliff binary ({{.GIT_CLIFF_VERSION}})
+    status:
+      - test -x {{.GIT_CLIFF_BIN}}
+    cmds:
+      - bash hack/install-git-cliff.sh {{.GIT_CLIFF_VERSION}} {{.GIT_CLIFF_BIN}}
+
+  changelog:
+    desc: Preview unreleased changelog section (stdout)
+    deps: [tools:git-cliff]
+    cmds:
+      - "{{.GIT_CLIFF_BIN}} --config {{.CLIFF_CONFIG}} --unreleased -o -"
+
+  changelog:write:
+    desc: Regenerate CHANGELOG.md from git tags and unreleased commits
+    deps: [tools:git-cliff]
+    cmds:
+      - "{{.GIT_CLIFF_BIN}} --config {{.CLIFF_CONFIG}} -o CHANGELOG.md"
+
+  changelog:release:
+    desc: Print changelog section for the latest tag (release notes)
+    deps: [tools:git-cliff]
+    cmds:
+      - "{{.GIT_CLIFF_BIN}} --config {{.CLIFF_CONFIG}} --latest -o -"
+
+  changelog:verify:
+    desc: Fail if CHANGELOG.md is stale (CI)
+    deps: [tools:git-cliff]
+    cmds:
+      - bash hack/verify-changelog.sh
 
   check:
     desc: Local gate — fmt, lint, arch, coverage≥90%, gitleaks, build, REWE-trace, pinned-actions

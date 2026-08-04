@@ -32,22 +32,24 @@ supply every path; the process runs with the caller's OS privileges.
 | Input | Trust assumption | Primary risks |
 |-------|------------------|---------------|
 | `--context` inventory documents | **Untrusted** unless the caller verified provenance | Malicious or oversized YAML/JSON; unexpected field shapes; data that becomes XSS when a downstream HTML renderer consumes markdown output |
-| `--template` Go templates | **Untrusted** unless the caller controls the template store | Template injection (arbitrary filesystem reads via template functions, unexpected execution paths, denial of service via pathological templates) |
+| `--template` path / body | **Untrusted** unless the caller controls the template store | The CLI reads the path you pass with `os.ReadFile` (same privilege as any other local file read). Execution uses `text/template` with a **pure** FuncMap (`semver` / time / sort / grouping helpers — no filesystem or network accessors). Residual risks: unexpected content rendered from context data, and denial of service via pathological templates |
 | `--upstream-deps` and similar side inputs | **Untrusted** | Same class as context documents |
 | `--output` path | Caller-chosen write target | Path traversal / overwrite of unintended files (including `.meta.json` sidecars next to the body path) |
 
 ### What this tool does
 
-- **Reads** inventory documents and templates from paths you provide.
+- **Reads** inventory documents and templates from caller-supplied paths (`os.ReadFile` in the CLI).
 - **Writes** render artifacts (and optional `.meta.json` sidecars) to paths you provide.
 - **Does not** fetch URLs, embed secrets, or escape the process sandbox beyond normal file I/O.
+- Template helpers cannot open additional files; any filesystem access is only the explicit
+  `--context` / `--template` / `--upstream-deps` / `--output` paths the caller chose.
 
 ### Mitigations callers should apply
 
 - Treat context files and templates as untrusted input when they come from outside your control
   (shared repos, CI artifacts, user uploads). Validate or pin template sources.
 - Prefer the built-in format paths when you do not need custom templates; review any custom
-  `text/template` / `html/template` carefully before use.
+  `text/template` carefully before use.
 - Point `--output` at a dedicated directory; avoid writing into shared system paths.
 - For **confluence-storage**, inventory strings are contextually XML-escaped. For **markdown**,
   strings are passed through — sanitize separately if you later HTML-render the result.

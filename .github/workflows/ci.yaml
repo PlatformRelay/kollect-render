@@ -14,17 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: go.mod
 
       - name: Install Task
-        uses: arduino/setup-task@v2
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -43,7 +43,19 @@ jobs:
           esac
           TARBALL="gitleaks_${GITLEAKS_VERSION}_${OS}_${ARCH}.tar.gz"
           BASE="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
-          curl -fsSL "${BASE}/${TARBALL}" -o /tmp/gitleaks.tgz
+          # Pinned SHA256 digests from gitleaks_${GITLEAKS_VERSION}_checksums.txt
+          case "${ARCH}" in
+            x64) EXPECTED_SHA256="551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb" ;;
+            arm64) EXPECTED_SHA256="e4a487ee7ccd7d3a7f7ec08657610aa3606637dab924210b3aee62570fb4b080" ;;
+          esac
+          curl --proto '=https' --tlsv1.2 -fsSL "${BASE}/${TARBALL}" -o /tmp/gitleaks.tgz
+          ACTUAL_SHA256="$(sha256sum /tmp/gitleaks.tgz | awk '{print $1}')"
+          if [[ "${ACTUAL_SHA256}" != "${EXPECTED_SHA256}" ]]; then
+            echo "gitleaks tarball checksum mismatch" >&2
+            echo "  expected: ${EXPECTED_SHA256}" >&2
+            echo "  actual:   ${ACTUAL_SHA256}" >&2
+            exit 1
+          fi
           tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
           sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
           gitleaks version

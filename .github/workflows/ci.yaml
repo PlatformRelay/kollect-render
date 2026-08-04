@@ -116,6 +116,37 @@ jobs:
           fail_ci_if_error: false
           use_oidc: true
 
+  # Cross-OS unit tests. Coverage floor stays on the Linux `check` job only.
+  # fail-fast: false so a macOS-only failure still reports the Linux result.
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: go test
+        run: go test ./...
+
+      # GoReleaser ships untested Windows binaries; we do not run windows-latest
+      # (bash-shaped coverage/gitleaks/rewe-trace). Cheap compile check only.
+      - name: Windows compile check
+        if: matrix.os == 'ubuntu-latest'
+        run: GOOS=windows go vet ./...
+
   # Full history required: git-cliff compares CHANGELOG.md to regenerated output
   # from tags + commits. Kept separate from `check` (shallow checkout).
   changelog:

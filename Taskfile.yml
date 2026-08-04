@@ -146,3 +146,28 @@ tasks:
       - task: build
       - task: rewe-trace
       - task: pinned-actions
+
+  docs:install:
+    desc: Install the locked MkDocs toolchain into .venv-docs
+    sources:
+      - docs/requirements-docs.txt
+    generates:
+      - .venv-docs/bin/mkdocs
+    cmds:
+      - uv venv --python 3.12 .venv-docs
+      - uv pip install --python .venv-docs/bin/python --require-hashes -r docs/requirements-docs.txt
+
+  docs:build:
+    desc: Build the MkDocs Material site into site/ (strict)
+    deps: [docs:install]
+    cmds:
+      - .venv-docs/bin/mkdocs build --strict
+
+  docs:check:
+    desc: Strict docs build — unrecognized links and nav warnings fail
+    deps: [docs:build]
+
+  docs:lock:
+    desc: Regenerate docs/requirements-docs.txt from docs/requirements-docs.in
+    cmds:
+      - uv pip compile --generate-hashes --python-version 3.12 --output-file docs/requirements-docs.txt docs/requirements-docs.in

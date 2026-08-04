@@ -1,4 +1,6 @@
 // Package render executes credential-free inventory templates (REQ-E2-S03).
+// Templates receive a RenderContext only — no filesystem or network helpers —
+// and produce deterministic body bytes for the format encoders.
 package render
 
 import "time"

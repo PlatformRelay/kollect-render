@@ -1,3 +1,5 @@
+// Package main is the kollect-render CLI: credential-free validate and render
+// of inventory documents into deterministic publisher artifacts.
 package main
 
 import (

@@ -1,4 +1,6 @@
-// Package validate checks inventory documents against schema v0.
+// Package validate checks inventory documents against schema.InventoryV0
+// (draft v0 evidence envelope). YAML or JSON input is accepted; failures are
+// reported as JSON Pointer-located schema errors with no network access.
 package validate
 
 import (

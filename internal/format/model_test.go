@@ -37,7 +37,7 @@ func (unsupportedBlock) block() {}
 func TestMustRegisterPanicOnDuplicate(t *testing.T) {
 	// Not parallel: mutates the global format registry.
 	defer func() {
-		if r := recover(); r == nil {
+		if recover() == nil {
 			t.Fatal("MustRegister duplicate must panic")
 		}
 	}()

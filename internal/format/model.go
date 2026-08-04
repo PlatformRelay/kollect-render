@@ -9,6 +9,10 @@ type Model struct {
 }
 
 // Block is one top-level page element.
+//
+// The unexported block() method seals the sum type to this package. Concrete
+// variants implement it as an empty marker so encoders can type-switch on a
+// closed set; the methods intentionally have no body (not stubs).
 type Block interface {
 	block()
 }
@@ -81,6 +85,10 @@ type Footnote struct {
 func (Footnote) block() {}
 
 // Inline is a text run inside a paragraph or list item.
+//
+// The unexported inline() method seals the sum type to this package. Concrete
+// variants implement it as an empty marker so encoders can type-switch on a
+// closed set; the methods intentionally have no body (not stubs).
 type Inline interface {
 	inline()
 }

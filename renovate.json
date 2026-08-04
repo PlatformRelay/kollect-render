@@ -1,0 +1,54 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":disableDependencyDashboard",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "labels": ["dependencies"],
+  "semanticCommits": "disabled",
+  "commitMessagePrefix": ":arrow_up:",
+  "commitMessageAction": "chore(deps): update",
+  "ignorePaths": [
+    "bin/**",
+    "dist/**",
+    ".task/**"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Annotated *_VERSION pins in Taskfile and CI",
+      "managerFilePatterns": [
+        "/Taskfile\\.yml$/",
+        "/^\\.github/workflows/ci\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s+[A-Z0-9_]+_VERSION:\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
+      ],
+      "datasourceTemplate": "{{datasource}}",
+      "depNameTemplate": "{{depName}}"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["gomod"],
+      "groupName": "go minor and patch dependencies",
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "pinDigests": true
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "groupName": "docker images",
+      "pinDigests": true
+    },
+    {
+      "description": "Keep Taskfile and CI tool pins (incl. both GITLEAKS_VERSION copies) in one PR",
+      "matchManagers": ["custom.regex"],
+      "groupName": "pinned build tools"
+    }
+  ]
+}

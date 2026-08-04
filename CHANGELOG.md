@@ -28,7 +28,7 @@ on the default branch using [git-cliff](https://git-cliff.org/).
 
 - Reject non-markdown format with --template [fa5461f](https://github.com/platformrelay/kollect-render/commit/fa5461f7c727384e578bc10f790f66af70c78b6d)
 
-- Include Rancher in REWE-trace gate [9818524](https://github.com/platformrelay/kollect-render/commit/9818524d876decb9a8751587009aac1239cce503)
+- Expand REWE-trace forbidden-marker coverage [9818524](https://github.com/platformrelay/kollect-render/commit/9818524d876decb9a8751587009aac1239cce503)
 
 
 ### Features

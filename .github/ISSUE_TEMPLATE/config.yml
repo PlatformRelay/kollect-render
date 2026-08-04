@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/PlatformRelay/kollect-render/blob/main/SECURITY.md
+    about: Report security-sensitive issues privately — do not open a public issue.
+  - name: Documentation
+    url: https://github.com/PlatformRelay/kollect-render/blob/main/README.md
+    about: Getting started, flags, and golden-test protocol.

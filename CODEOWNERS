@@ -1,0 +1,14 @@
+# Default review routing — @konih owns all paths until additional maintainers join.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+* @konih
+
+# Security-sensitive surfaces (CI, supply chain, CLI, schema, goldens) — called out
+# explicitly so an added maintainer never bypasses review on these.
+/.github/  @konih
+/cmd/      @konih
+/internal/ @konih
+/schema/   @konih
+/docs/     @konih
+/hack/     @konih
+/test/     @konih

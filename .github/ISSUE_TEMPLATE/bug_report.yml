@@ -1,0 +1,72 @@
+name: Bug report
+description: Report a defect in kollect-render (CLI, render, validate, or formats)
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Reproducible reports with a minimal context file get fixed fastest.
+        Do **not** paste secrets — kollect-render is credential-free by design; keep fixtures synthetic.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+      placeholder: render --format markdown produced empty sections when...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: kollect-render version
+      description: Output of `kollect-render version` (or the release tag / commit you built).
+      placeholder: "v0.1.0 / kollect-render version ..."
+    validations:
+      required: true
+  - type: textarea
+    id: repro-context
+    attributes:
+      label: Minimal reproducing context
+      description: |
+        Paste a minimal `--context` YAML (or attach a gist). Redact anything sensitive.
+        Prefer a synthetic fixture that still triggers the bug.
+      placeholder: |
+        generation:
+          generatedAt: "2026-01-01T00:00:00Z"
+          origin: manual
+        # ... minimal fields that reproduce ...
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command line
+      description: Exact `kollect-render` invocation (flags, format, template path).
+      placeholder: |
+        kollect-render render --format markdown --context repro.yaml --output out.md
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual output / error
+      description: Stdout, stderr, or a short excerpt of the rendered artifact.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: OS, Go version if building from source, related PRs, workarounds tried.
+    validations:
+      required: false

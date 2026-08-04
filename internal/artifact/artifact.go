@@ -1,5 +1,6 @@
-// Package artifact defines the private-publisher render artifact contract (REQ-E2-S05-01):
-// deterministic body bytes plus a digest/metadata sidecar. No network or credential access.
+// Package artifact defines the private-publisher render artifact contract
+// (REQ-E2-S05-01): deterministic body bytes plus a digest/metadata sidecar
+// (*.meta.json). The package never opens the network or holds credentials.
 package artifact
 
 import (

@@ -1,4 +1,6 @@
 // Package format is the compile-time output-format registry (REQ-E2-S04).
+// A shared Model of sealed Block/Inline nodes is encoded to markdown or
+// confluence-storage; string content is always contextually escaped.
 package format
 
 // Model is a format-agnostic rendered page. Encoders turn the same Model into

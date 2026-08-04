@@ -43,6 +43,12 @@ UPDATE_GOLDEN=1 go test ./internal/format/ ./internal/render/
 Review the golden diff like code before committing. Do not regenerate goldens to “make CI green”
 without understanding the behaviour change.
 
+## Releases
+
+Before tagging `vX.Y.Z`, run the read-only [release gate](development/release.md). It proves
+the candidate SHA is on protected `main`, required checks are green, and `CHANGELOG.md` has a
+matching section — without creating a tag or publishing artifacts.
+
 ## Commits
 
 Conventional commits with an ASCII gitmoji shortcode (no Unicode emoji, no AI co-author trailers).

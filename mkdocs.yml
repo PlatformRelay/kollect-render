@@ -40,6 +40,7 @@ nav:
   - Output formats: formats.md
   - Inventory schema: schema.md
   - Development: development.md
+  - Releasing: development/release.md
   - Security: security.md
 
 markdown_extensions:

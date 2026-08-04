@@ -90,8 +90,13 @@ tasks:
     cmds:
       - bash hack/rewe-trace.sh
 
+  pinned-actions:
+    desc: Fail if any workflow action is not pinned to a full commit SHA
+    cmds:
+      - bash hack/pinned-actions.sh
+
   check:
-    desc: Local gate — fmt, lint, arch, coverage≥90%, gitleaks, build, REWE-trace
+    desc: Local gate — fmt, lint, arch, coverage≥90%, gitleaks, build, REWE-trace, pinned-actions
     cmds:
       - task: fmt-check
       - task: vet
@@ -101,3 +106,4 @@ tasks:
       - task: gitleaks
       - task: build
       - task: rewe-trace
+      - task: pinned-actions

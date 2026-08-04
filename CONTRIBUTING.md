@@ -14,11 +14,16 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md).
    ```
 
    That runs `gofmt` check, `go vet`, golangci-lint, go-arch-lint, unit tests with an
-   **internal/ coverage floor of ≥90%**, gitleaks, a binary build, and the **REWE-trace**
-   gate (fails if forbidden internal markers appear in tracked files).
+   **internal/ coverage floor of ≥90%**, gitleaks, a binary build, the **REWE-trace**
+   gate (fails if forbidden internal markers appear in tracked files), and the
+   **pinned-actions** gate (every third-party `uses:` in `.github/workflows/` must be a
+   full 40-character commit SHA, e.g. `owner/repo@<sha> # vN.M.P`).
 
 3. Keep the tree free of organization-specific identifiers. Runtime configuration belongs
    with callers — not in this repository.
+
+4. When adding or bumping a GitHub Action, pin it to a commit SHA (not a mutable tag) and
+   keep the human-readable version in a trailing comment so Renovate can maintain it.
 
 ## Commits
 

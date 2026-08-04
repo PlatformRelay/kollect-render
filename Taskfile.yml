@@ -65,7 +65,7 @@ tasks:
       - go test ./...
 
   coverage:
-    desc: Run tests with internal/ coverage floor (COVERAGE_MIN, default 90)
+    desc: Run tests with whole-module coverage floor (COVERAGE_MIN, default 90)
     cmds:
       - bash hack/coverage.sh
 

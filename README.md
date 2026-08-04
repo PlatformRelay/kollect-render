@@ -12,9 +12,10 @@ transforms documents you already have.
 ## Status
 
 OSS renderer with kollect-parity quality gates (lint, arch-lint, coverage ≥90%, gitleaks,
-REWE-trace). Tagged releases (`vX.Y.Z`) publish multi-platform binaries and a GHCR container
-image via GoReleaser. `validate` and `render` are available; output formats register at compile
-time (`markdown`, `confluence-storage`). Writing `--output <file>` emits `<file>.meta.json`
+REWE-trace). SonarCloud analysis runs in CI on every push/PR (badge deferred). Tagged releases
+(`vX.Y.Z`) publish multi-platform binaries and a GHCR container image via GoReleaser.
+`validate` and `render` are available; output formats register at compile time
+(`markdown`, `confluence-storage`). Writing `--output <file>` emits `<file>.meta.json`
 (content digest + generation metadata) for the private publisher contract.
 
 ## Quick start

@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
-# E4-S02: Sonar scope — CPD + go:S3776 must ignore tests only, not production.
-# Arrange-invoke-assert clones in *_test.go are intentional CLI contract
-# readability; Cognitive Complexity (S3776) in production stays open.
+# E4-S02: Sonar scope — CPD must not count *_test.go; go:S3776 ignore tests only.
+#
+# SonarCloud indexes files matching both sonar.sources=. and
+# sonar.test.inclusions as sources for CPD. sonar.cpd.exclusions alone does
+# not clear new_duplicated_lines_density when tests are dual-indexed (QG
+# evidence: all duplicated files were *_test.go despite cpd.exclusions).
+# Standard split: exclude *_test.go from sources, keep them as tests so
+# issue rules still apply; S3776 stays scoped via multicriteria.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -28,7 +33,29 @@ do
 done
 pass "production S3776 target files exist"
 
-# CPD exclusions: tests only
+# Sources must exclude tests so CPD does not dual-index them as main sources.
+excl_line="$(grep -E '^sonar\.exclusions=' "${PROPS}" || true)"
+[[ -n "${excl_line}" ]] || fail "sonar.exclusions= not found in ${PROPS}"
+excl_value="${excl_line#sonar.exclusions=}"
+IFS=',' read -r -a EXCL <<<"${excl_value}"
+found_test_excl=0
+for pat in "${EXCL[@]}"; do
+  pat="${pat//[[:space:]]/}"
+  if [[ "${pat}" == "**/*_test.go" ]]; then
+    found_test_excl=1
+  fi
+done
+((found_test_excl == 1)) || fail "sonar.exclusions must include **/*_test.go (got: ${excl_value})"
+pass "sonar.exclusions includes **/*_test.go"
+
+# Tests remain analyzed as tests (issues / coverage linkage), not dropped entirely.
+test_inc_line="$(grep -E '^sonar\.test\.inclusions=' "${PROPS}" || true)"
+[[ -n "${test_inc_line}" ]] || fail "sonar.test.inclusions= not found in ${PROPS}"
+[[ "${test_inc_line#sonar.test.inclusions=}" == "**/*_test.go" ]] || \
+  fail "sonar.test.inclusions expected **/*_test.go, got: ${test_inc_line#*=}"
+pass "sonar.test.inclusions=**/*_test.go"
+
+# Belt-and-suspenders: keep cpd.exclusions aligned (effective fix is source exclusion).
 cpd_line="$(grep -E '^sonar\.cpd\.exclusions=' "${PROPS}" || true)"
 [[ -n "${cpd_line}" ]] || fail "sonar.cpd.exclusions= not found in ${PROPS}"
 cpd_value="${cpd_line#sonar.cpd.exclusions=}"
@@ -58,18 +85,20 @@ res_line="$(grep -E '^sonar\.issue\.ignore\.multicriteria\.s3776tests\.resourceK
 [[ "${res_line#*=}" == "**/*_test.go" ]] || fail "s3776tests.resourceKey expected **/*_test.go, got: ${res_line#*=}"
 pass "s3776tests.resourceKey=**/*_test.go"
 
-# Must NOT exclude tests from analysis entirely (unlike kollect).
-excl_line="$(grep -E '^sonar\.exclusions=' "${PROPS}" || true)"
-if [[ -n "${excl_line}" ]]; then
-  excl_value="${excl_line#sonar.exclusions=}"
-  IFS=',' read -r -a EXCL <<<"${excl_value}"
+# Production must not be blanket-excluded from analysis.
+for prod_pat in \
+  '**/cmd/**' \
+  '**/internal/**' \
+  'cmd/kollect-render/main.go' \
+  'internal/format/**'
+do
   for pat in "${EXCL[@]}"; do
     pat="${pat//[[:space:]]/}"
-    if [[ "${pat}" == "**/*_test.go" || "${pat}" == "*_test.go" ]]; then
-      fail "sonar.exclusions must not drop tests from analysis (found: ${pat})"
+    if [[ "${pat}" == "${prod_pat}" ]]; then
+      fail "sonar.exclusions must not silence production path ${prod_pat}"
     fi
   done
-fi
-pass "tests remain in sonar analysis set"
+done
+pass "production paths not blanket-excluded"
 
 echo "All sonar_e4_s02 scope tests passed."

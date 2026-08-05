@@ -11,6 +11,16 @@ on the default branch using [git-cliff](https://git-cliff.org/).
 
 ### Bug Fixes
 
+- **sonar:** Exclude tests from sources so CPD clears [094fc8e](https://github.com/platformrelay/kollect-render/commit/094fc8ee9a97f1647fee02d29d3036b25930cd4a)
+
+- **ci:** Disable Codecov coverage file search [1107268](https://github.com/platformrelay/kollect-render/commit/110726825c04ae240bc2585b26db5c387ec61885)
+
+- **release:** Match CHANGELOG VERSION as fixed string [ba9cdf5](https://github.com/platformrelay/kollect-render/commit/ba9cdf5f9adc2286d165251ae3d91cfe31ac4b73)
+
+- **ci:** Scope docs Pages OIDC perms to deploy job [b87637b](https://github.com/platformrelay/kollect-render/commit/b87637b630f0e6942a1ca4511613a4118baf875c)
+
+- **hack:** Enforce HTTPS on git-cliff curl download [5035c23](https://github.com/platformrelay/kollect-render/commit/5035c23e1fffe680f9b76f43c067cb8c75d9dd9c)
+
 - **docs:** Correct template threat model in SECURITY [98df359](https://github.com/platformrelay/kollect-render/commit/98df359493e3b5b6c453bfaacb8e06743b85330b)
 
 - **ci:** SHA-pin workflow actions and HTTPS-harden gitleaks fetch [134399b](https://github.com/platformrelay/kollect-render/commit/134399bf8275be0acc308b3ee9bf2264c5e44b84)

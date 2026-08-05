@@ -58,7 +58,19 @@ fi
 changelog="$(gh api \
 	-H "Accept: application/vnd.github.raw" \
 	"repos/${REPO}/contents/CHANGELOG.md?ref=${SHA}")"
-if ! grep -Eq "^## \\[${VERSION}\\]( |$)" <<<"${changelog}"; then
+# Fixed-string match: VERSION is SemVer-validated but may still contain ERE
+# metacharacters (e.g. dots). Do not interpolate it into a regex.
+heading_prefix="## [${VERSION}]"
+changelog_has_section=0
+while IFS= read -r line || [[ -n "${line}" ]]; do
+	case "${line}" in
+		"${heading_prefix}" | "${heading_prefix}"\ *)
+			changelog_has_section=1
+			break
+			;;
+	esac
+done <<<"${changelog}"
+if [[ "${changelog_has_section}" -ne 1 ]]; then
 	echo "error: CHANGELOG.md has no section for ${VERSION} at ${SHA}" >&2
 	exit 1
 fi

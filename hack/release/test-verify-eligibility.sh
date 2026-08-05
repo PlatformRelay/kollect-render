@@ -129,6 +129,20 @@ write_changelog "## [Unreleased]
 fail_if_passes "missing changelog"
 grep -q "CHANGELOG.md has no section for ${VERSION}" "${TMP}/err"
 
+# VERSION is SemVer-validated but still contains ERE metacharacters (dots). A
+# section like [0X2Y0] must not satisfy VERSION=0.2.0 when matching is literal.
+write_green_checks
+write_changelog "## [Unreleased]
+
+## [0X2Y0] - 2026-08-04
+
+### Features
+
+- Fake section that would match an unescaped 0.2.0 ERE pattern
+"
+fail_if_passes "VERSION metacharacters must be literal in changelog match"
+grep -q "CHANGELOG.md has no section for ${VERSION}" "${TMP}/err"
+
 write_green_checks
 write_changelog "## [Unreleased]
 

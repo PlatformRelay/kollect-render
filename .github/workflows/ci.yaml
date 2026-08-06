@@ -170,16 +170,18 @@ jobs:
       - name: task changelog:verify
         run: task changelog:verify
 
-  # SonarCloud: needs repo secret SONAR_TOKEN. Automatic Analysis must stay off
-  # (mutually exclusive with CI analysis + Go coverage). Non-blocking per OD-3 —
-  # quality gate is ERROR until E4-S02 clears duplication; continue-on-error so
-  # that does not block the remediating lanes.
+  # SonarCloud: needs repo secret SONAR_TOKEN. Automatic Analysis must stay OFF —
+  # it is mutually exclusive with CI analysis (the scanner exits 3) and it ignores
+  # sonar-project.properties, so the E4-S02 test exclusions silently would not
+  # apply. Blocking as of 2026-08-06 (OD-3 revisit): the continue-on-error escape
+  # hatch is gone AND sonar.qualitygate.wait=true is set, so both a scanner
+  # failure and an ERROR quality gate now fail this job. Fork PRs receive no
+  # secrets, so the scan step self-skips rather than failing.
   sonarqube:
     name: sonarqube
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [check]
-    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1

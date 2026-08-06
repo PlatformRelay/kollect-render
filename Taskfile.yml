@@ -103,6 +103,22 @@ tasks:
     cmds:
       - bash hack/pinned-actions.sh
 
+  guards:
+    desc: Run the hack/test/*.sh config regression guards
+    cmds:
+      - |
+        fail=0
+        for t in hack/test/*.sh; do
+          if bash "$t" >/dev/null 2>&1; then
+            echo "ok: $t"
+          else
+            echo "FAIL: $t" >&2
+            bash "$t" || true
+            fail=1
+          fi
+        done
+        exit "$fail"
+
   tools:git-cliff:
     desc: Download pinned git-cliff binary ({{.GIT_CLIFF_VERSION}})
     status:
@@ -135,7 +151,7 @@ tasks:
       - bash hack/verify-changelog.sh
 
   check:
-    desc: Local gate — fmt, lint, arch, coverage≥90%, gitleaks, build, REWE-trace, pinned-actions
+    desc: Local gate — fmt, lint, arch, coverage≥90%, gitleaks, build, REWE-trace, pinned-actions, guards
     cmds:
       - task: fmt-check
       - task: vet
@@ -146,6 +162,7 @@ tasks:
       - task: build
       - task: rewe-trace
       - task: pinned-actions
+      - task: guards
 
   docs:install:
     desc: Install the locked MkDocs toolchain into .venv-docs

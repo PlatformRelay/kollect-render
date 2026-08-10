@@ -15,7 +15,7 @@ vars:
   GIT_CLIFF_BIN: "{{.BIN_DIR}}/git-cliff"
   CLIFF_CONFIG: hack/release/cliff.toml
   # renovate: datasource=github-releases depName=fe3dback/go-arch-lint
-  GO_ARCH_LINT_VERSION: v1.15.0
+  GO_ARCH_LINT_VERSION: v1.17.0
   # renovate: datasource=github-releases depName=golangci/golangci-lint
   GOLANGCI_LINT_VERSION: v2.12.2
   # renovate: datasource=github-releases depName=gitleaks/gitleaks

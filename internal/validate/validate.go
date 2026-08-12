@@ -138,8 +138,7 @@ func pointeredResult(err error) error {
 	res := &Result{}
 	collectLeaves(ve, res)
 	if len(res.Errors) == 0 {
-		msg := ve.Error()
-		res.Errors = append(res.Errors, Error{Pointer: pointerFor(ve), Message: msg})
+		res.Errors = append(res.Errors, Error{Pointer: pointerFor(ve), Message: validationMessage(ve)})
 	}
 	return res
 }
@@ -149,16 +148,22 @@ func collectLeaves(ve *jsonschema.ValidationError, res *Result) {
 		return
 	}
 	if len(ve.Causes) == 0 {
-		msg := ve.Error()
-		if ve.ErrorKind != nil {
-			msg = ve.ErrorKind.LocalizedString(schemaPrinter)
-		}
-		res.Errors = append(res.Errors, Error{Pointer: pointerFor(ve), Message: msg})
+		res.Errors = append(res.Errors, Error{Pointer: pointerFor(ve), Message: validationMessage(ve)})
 		return
 	}
 	for _, cause := range ve.Causes {
 		collectLeaves(cause, res)
 	}
+}
+
+func validationMessage(ve *jsonschema.ValidationError) string {
+	if ve == nil {
+		return "validation failed"
+	}
+	if ve.ErrorKind != nil {
+		return ve.ErrorKind.LocalizedString(schemaPrinter)
+	}
+	return "validation failed"
 }
 
 func pointerFor(ve *jsonschema.ValidationError) string {

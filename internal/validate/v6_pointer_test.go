@@ -15,6 +15,7 @@ func TestValidationMessageNil(t *testing.T) {
 	}
 }
 
+func TestPointeredResultPassesThroughNonValidationError(t *testing.T) {
 	t.Parallel()
 	in := errors.New("not a schema error")
 	if got := pointeredResult(in); !errors.Is(got, in) {

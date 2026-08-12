@@ -12,11 +12,16 @@ import (
 	"sync"
 
 	"github.com/platformrelay/kollect-render/schema"
-	"github.com/santhosh-tekuri/jsonschema/v5"
+	"github.com/santhosh-tekuri/jsonschema/v6"
+	"github.com/santhosh-tekuri/jsonschema/v6/kind"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"gopkg.in/yaml.v3"
 )
 
 const schemaURL = "https://github.com/platformrelay/kollect-render/schema/inventory-v0.schema.json"
+
+var schemaPrinter = message.NewPrinter(language.English)
 
 // Error is a single schema violation located by JSON Pointer.
 type Error struct {
@@ -107,8 +112,13 @@ func decodeDocument(raw []byte) (any, error) {
 func loadSchema() (*jsonschema.Schema, error) {
 	schemaOnce.Do(func() {
 		c := jsonschema.NewCompiler()
-		c.AssertFormat = true
-		if err := c.AddResource(schemaURL, bytes.NewReader(schema.InventoryV0)); err != nil {
+		c.AssertFormat()
+		doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(schema.InventoryV0))
+		if err != nil {
+			schemaErr = fmt.Errorf("decode schema: %w", err)
+			return
+		}
+		if err := c.AddResource(schemaURL, doc); err != nil {
 			schemaErr = fmt.Errorf("add schema resource: %w", err)
 			return
 		}
@@ -128,8 +138,8 @@ func pointeredResult(err error) error {
 	res := &Result{}
 	collectLeaves(ve, res)
 	if len(res.Errors) == 0 {
-		msg := ve.Message
-		res.Errors = append(res.Errors, Error{Pointer: pointerFor(ve.InstanceLocation, msg), Message: msg})
+		msg := ve.Error()
+		res.Errors = append(res.Errors, Error{Pointer: pointerFor(ve), Message: msg})
 	}
 	return res
 }
@@ -139,12 +149,11 @@ func collectLeaves(ve *jsonschema.ValidationError, res *Result) {
 		return
 	}
 	if len(ve.Causes) == 0 {
-		msg := ve.Message
-		if msg == "" {
-			msg = ve.Error()
+		msg := ve.Error()
+		if ve.ErrorKind != nil {
+			msg = ve.ErrorKind.LocalizedString(schemaPrinter)
 		}
-		ptr := pointerFor(ve.InstanceLocation, msg)
-		res.Errors = append(res.Errors, Error{Pointer: ptr, Message: msg})
+		res.Errors = append(res.Errors, Error{Pointer: pointerFor(ve), Message: msg})
 		return
 	}
 	for _, cause := range ve.Causes {
@@ -152,42 +161,41 @@ func collectLeaves(ve *jsonschema.ValidationError, res *Result) {
 	}
 }
 
-func pointerFor(loc, msg string) string {
-	base := normalizePointer(loc)
-	if prop, ok := propertyFromMessage(msg); ok {
+func pointerFor(ve *jsonschema.ValidationError) string {
+	base := jsonPointer(ve.InstanceLocation)
+	if prop, ok := propertyFromKind(ve.ErrorKind); ok {
 		return joinPointer(base, prop)
 	}
 	return base
 }
 
-func propertyFromMessage(msg string) (string, bool) {
-	// jsonschema v5 often names the offending key in the message while
-	// InstanceLocation points at the parent object (or the document root).
-	const (
-		additionalPrefix = "additionalProperties '"
-		missingPrefix    = "missing properties: '"
-	)
-	switch {
-	case strings.Contains(msg, additionalPrefix):
-		return extractQuotedAfter(msg, additionalPrefix)
-	case strings.Contains(msg, missingPrefix):
-		return extractQuotedAfter(msg, missingPrefix)
-	default:
-		return "", false
+func jsonPointer(tokens []string) string {
+	if len(tokens) == 0 {
+		return ""
 	}
+	var b strings.Builder
+	for _, tok := range tokens {
+		b.WriteByte('/')
+		b.WriteString(escapePointerToken(tok))
+	}
+	return b.String()
 }
 
-func extractQuotedAfter(msg, prefix string) (string, bool) {
-	i := strings.Index(msg, prefix)
-	if i < 0 {
+func propertyFromKind(k jsonschema.ErrorKind) (string, bool) {
+	if k == nil {
 		return "", false
 	}
-	rest := msg[i+len(prefix):]
-	end := strings.IndexByte(rest, '\'')
-	if end <= 0 {
-		return "", false
+	switch typed := k.(type) {
+	case *kind.Required:
+		if len(typed.Missing) == 1 {
+			return typed.Missing[0], true
+		}
+	case *kind.AdditionalProperties:
+		if len(typed.Properties) == 1 {
+			return typed.Properties[0], true
+		}
 	}
-	return rest[:end], true
+	return "", false
 }
 
 func joinPointer(base, prop string) string {
@@ -202,14 +210,4 @@ func escapePointerToken(s string) string {
 	s = strings.ReplaceAll(s, "~", "~0")
 	s = strings.ReplaceAll(s, "/", "~1")
 	return s
-}
-
-func normalizePointer(loc string) string {
-	if loc == "" {
-		return ""
-	}
-	if strings.HasPrefix(loc, "/") {
-		return loc
-	}
-	return "/" + loc
 }

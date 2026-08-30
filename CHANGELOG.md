@@ -11,7 +11,7 @@ on the default branch using [git-cliff](https://git-cliff.org/).
 
 ### Bug Fixes
 
-- **test:** Restore pointeredResult passthrough test syntax [c3289e5](https://github.com/platformrelay/kollect-render/commit/c3289e5f272b3ead96d33b89bcb6dde0c234b6de)
+- **test:** Restore pointeredResult passthrough test syntax [1b01db8](https://github.com/platformrelay/kollect-render/commit/1b01db89b871ba96509ccf8758a0a3b1e622e3ce)
 
 - **sonar:** Exclude tests from sources so CPD clears [094fc8e](https://github.com/platformrelay/kollect-render/commit/094fc8ee9a97f1647fee02d29d3036b25930cd4a)
 

@@ -7,6 +7,9 @@ exclude:
   - bin/**
   - dist/**
   - agent-context
+  # Nested agent worktrees live at .claude/worktrees/<id>/; scanning them
+  # yields spurious "not attached to any component" notices.
+  - .claude/**
 allow:
   depOnAnyVendor: true
 

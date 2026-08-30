@@ -3,6 +3,7 @@ package validate_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/platformrelay/kollect-render/internal/validate"
@@ -23,8 +24,8 @@ func FuzzBytes(f *testing.F) {
 		}
 		f.Add(raw)
 	}
-	// Non-golden seeds: empty, whitespace, scalar, alias-heavy YAML, deep
-	// nesting, NaN/Inf (unrepresentable in JSON), and a huge-int overflow.
+	// Non-golden seeds: empty, whitespace, scalar, YAML aliases and binary,
+	// NaN/Inf (unrepresentable in JSON), and a huge-int overflow.
 	for _, s := range []string{
 		"", "   \n\t ", "null", "42", "[]", "{}", "- a\n- b",
 		"a: !!binary |\n  aGVsbG8=",
@@ -34,6 +35,12 @@ func FuzzBytes(f *testing.F) {
 		"{\"apiVersion\":\"v0\"}",
 	} {
 		f.Add([]byte(s))
+	}
+	// Deep nesting, generated rather than written out. yaml.v3 caps decode
+	// depth at 10000 and rejects deeper input; these stay well under the cap so
+	// they decode and go on to exercise json.Marshal's recursion.
+	for _, depth := range []int{64, 512} {
+		f.Add([]byte(strings.Repeat("[", depth) + strings.Repeat("]", depth)))
 	}
 
 	f.Fuzz(func(t *testing.T, raw []byte) {

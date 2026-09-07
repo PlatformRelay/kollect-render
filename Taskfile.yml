@@ -11,7 +11,7 @@ vars:
   COVERAGE_MIN: "90"
   BIN_DIR: bin
   # renovate: datasource=github-releases depName=orhun/git-cliff
-  GIT_CLIFF_VERSION: v2.13.1
+  GIT_CLIFF_VERSION: v2.14.1
   GIT_CLIFF_BIN: "{{.BIN_DIR}}/git-cliff"
   CLIFF_CONFIG: hack/release/cliff.toml
   # renovate: datasource=github-releases depName=fe3dback/go-arch-lint

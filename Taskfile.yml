@@ -133,10 +133,10 @@ tasks:
       - "{{.GIT_CLIFF_BIN}} --config {{.CLIFF_CONFIG}} --unreleased -o -"
 
   changelog:write:
-    desc: Regenerate CHANGELOG.md from git tags and unreleased commits
+    desc: Regenerate CHANGELOG.md (VERSION=X.Y.Z renders unreleased commits as that release)
     deps: [tools:git-cliff]
     cmds:
-      - "{{.GIT_CLIFF_BIN}} --config {{.CLIFF_CONFIG}} -o CHANGELOG.md"
+      - "{{.GIT_CLIFF_BIN}} --config {{.CLIFF_CONFIG}} {{if .VERSION}}--tag v{{.VERSION}} {{end}}-o CHANGELOG.md"
 
   changelog:release:
     desc: Print changelog section for the latest tag (release notes)

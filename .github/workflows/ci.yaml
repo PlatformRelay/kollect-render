@@ -154,6 +154,9 @@ jobs:
     name: changelog
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -167,7 +170,11 @@ jobs:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      # [remote.github] in cliff.toml makes git-cliff query the PR API; unauthenticated
+      # calls share the runner IP's 60/h limit and fail intermittently with 403.
       - name: task changelog:verify
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: task changelog:verify
 
   # SonarCloud: needs repo secret SONAR_TOKEN. Automatic Analysis must stay OFF —

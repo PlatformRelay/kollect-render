@@ -65,7 +65,10 @@ That push triggers Release (GoReleaser). The gate itself does not publish.
 ## Checklist before tagging
 
 1. `main` is green for the candidate SHA (`check` + `changelog`).
-2. `CHANGELOG.md` on that SHA already has `## [X.Y.Z]` (run `task changelog:write` /
-   commit as needed).
+2. `CHANGELOG.md` on that SHA already has `## [X.Y.Z]` (run
+   `task changelog:write VERSION=X.Y.Z` and commit as `chore(release)`). `changelog`
+   CI treats an untagged top section as a pending release and verifies it with
+   `--tag vX.Y.Z`. Tag on the same UTC day the release commit lands on `main`: once
+   tagged, the heading date must match the tagged commit's date.
 3. Release gate passed for `${RELEASE_SHA}` + `${VERSION}`.
 4. Tag `vX.Y.Z` at that exact SHA — never an arbitrary branch tip.

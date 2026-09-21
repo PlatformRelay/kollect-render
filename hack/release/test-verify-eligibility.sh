@@ -156,4 +156,18 @@ run_case
 grep -q "Release eligibility passed for PlatformRelay/kollect-render@${SHA}" "${TMP}/out"
 grep -q "CHANGELOG section \\[${VERSION}\\]" "${TMP}/out"
 
+# git-cliff renders released headings as "## [X.Y.Z](compare-url) - date"; the
+# link follows the bracket directly, so a prefix match on "## [X.Y.Z] " misses it.
+write_green_checks
+write_changelog "## [Unreleased]
+
+## [${VERSION}](https://github.com/platformrelay/kollect-render/compare/v0.0.1..v${VERSION}) - 2026-08-04
+
+### Bug Fixes
+
+- Something releasable
+"
+run_case
+grep -q "CHANGELOG section \\[${VERSION}\\]" "${TMP}/out"
+
 echo "verify-eligibility tests: ok"

@@ -60,11 +60,12 @@ changelog="$(gh api \
 	"repos/${REPO}/contents/CHANGELOG.md?ref=${SHA}")"
 # Fixed-string match: VERSION is SemVer-validated but may still contain ERE
 # metacharacters (e.g. dots). Do not interpolate it into a regex.
+# Accept "## [X.Y.Z]", "## [X.Y.Z] - date" and git-cliff's "## [X.Y.Z](compare-url) - date".
 heading_prefix="## [${VERSION}]"
 changelog_has_section=0
 while IFS= read -r line || [[ -n "${line}" ]]; do
 	case "${line}" in
-		"${heading_prefix}" | "${heading_prefix}"\ *)
+		"${heading_prefix}" | "${heading_prefix}"\ * | "${heading_prefix}"\(*)
 			changelog_has_section=1
 			break
 			;;
